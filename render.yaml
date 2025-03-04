@@ -2,7 +2,11 @@ services:
   - type: web
     name: hodlem-sol
     env: node
-    buildCommand: npm install && npm run build:prod
+    buildCommand: |
+      npm install
+      cd client && npm install && npm run build
+      cd ..
+      npm run build
     startCommand: npm start
     envVars:
       - key: NODE_ENV

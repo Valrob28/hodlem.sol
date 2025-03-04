@@ -16,7 +16,7 @@ app.use(cors({
 
 // Servir les fichiers statiques du frontend en production
 if (process.env.NODE_ENV === 'production') {
-  const clientBuildPath = path.join(__dirname, '../../client/build');
+  const clientBuildPath = path.join(__dirname, '../client/build');
   console.log('Serving static files from:', clientBuildPath);
   
   app.use(express.static(clientBuildPath));
@@ -66,22 +66,35 @@ const gameState: GameState = {
 const MAX_PLAYERS = 10;
 const INITIAL_CHIPS = 10000;
 
-// Fonction pour obtenir le prix des cryptomonnaies
+// Fonction pour obtenir le prix des cryptomonnaies avec gestion des erreurs
 async function getCryptoPrices() {
   try {
-    const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd');
+    const response = await axios.get('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum,solana&vs_currencies=usd', {
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
     return response.data;
   } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 429) {
+      console.log('Rate limit atteint, attente de 60 secondes...');
+      await new Promise(resolve => setTimeout(resolve, 60000));
+      return getCryptoPrices(); // Réessayer après l'attente
+    }
     console.error('Erreur lors de la récupération des prix:', error);
     return null;
   }
 }
 
-// Mise à jour des prix toutes les 5 minutes
+// Mise à jour des prix toutes les 5 minutes avec gestion des erreurs
 setInterval(async () => {
-  const prices = await getCryptoPrices();
-  if (prices) {
-    io.emit('cryptoPrices', prices);
+  try {
+    const prices = await getCryptoPrices();
+    if (prices) {
+      io.emit('cryptoPrices', prices);
+    }
+  } catch (error) {
+    console.error('Erreur lors de la mise à jour des prix:', error);
   }
 }, 300000);
 
