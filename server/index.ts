@@ -15,6 +15,8 @@ console.log('Starting server with configuration:');
 console.log('NODE_ENV:', process.env.NODE_ENV);
 console.log('PORT:', PORT);
 console.log('CLIENT_URL:', CLIENT_URL);
+console.log('Current directory:', __dirname);
+console.log('Working directory:', process.cwd());
 
 app.use(cors({
   origin: CLIENT_URL,
@@ -25,46 +27,28 @@ app.use(cors({
 if (process.env.NODE_ENV === 'production') {
   console.log('Running in production mode');
   
-  // Essayer différents chemins possibles
-  const possiblePaths = [
-    path.join(__dirname, 'client', 'build'),
-    path.join(__dirname, '../client', 'build'),
-    path.join(__dirname, '../../client', 'build'),
-    path.join(process.cwd(), 'client', 'build'),
-    path.join(process.cwd(), 'src', 'client', 'build')
-  ];
-
-  console.log('Current directory:', __dirname);
-  console.log('Current working directory:', process.cwd());
+  // Chemin relatif au dossier build
+  const clientBuildPath = path.join(process.cwd(), 'client', 'build');
   
-  let clientBuildPath = '';
+  console.log('Looking for build directory at:', clientBuildPath);
   
-  // Trouver le premier chemin qui existe
-  for (const buildPath of possiblePaths) {
-    try {
-      fs.accessSync(buildPath);
-      clientBuildPath = buildPath;
-      console.log('Found build directory at:', clientBuildPath);
-      break;
-    } catch (err) {
-      console.log('Path not found:', buildPath);
-    }
-  }
-
-  if (!clientBuildPath) {
-    console.error('No build directory found in any of the expected locations');
-    console.error('Available directories in current directory:', fs.readdirSync(__dirname));
-    console.error('Available directories in working directory:', fs.readdirSync(process.cwd()));
-  } else {
-    console.log('Serving static files from:', clientBuildPath);
+  try {
+    fs.accessSync(clientBuildPath);
+    console.log('Found build directory at:', clientBuildPath);
+    console.log('Build directory contents:', fs.readdirSync(clientBuildPath));
+    
     app.use(express.static(clientBuildPath));
     
     // Gérer toutes les autres routes en renvoyant index.html
     app.get('*', (req, res) => {
+      console.log('Request received for:', req.path);
       const indexPath = path.join(clientBuildPath, 'index.html');
       console.log('Serving index.html from:', indexPath);
       res.sendFile(indexPath);
     });
+  } catch (err) {
+    console.error('Error accessing build directory:', err);
+    console.error('Available directories in working directory:', fs.readdirSync(process.cwd()));
   }
 }
 
