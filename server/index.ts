@@ -19,8 +19,8 @@ app.use(cors({
 // Servir les fichiers statiques du frontend en production
 if (process.env.NODE_ENV === 'production') {
   // Chemin absolu vers le dossier de build
-  const clientBuildPath = path.join(process.cwd(), 'client', 'build');
-  console.log('Current working directory:', process.cwd());
+  const clientBuildPath = path.join(__dirname, 'client', 'build');
+  console.log('Current directory:', __dirname);
   console.log('Looking for build directory at:', clientBuildPath);
   
   // Vérifier si le dossier existe
@@ -39,7 +39,7 @@ if (process.env.NODE_ENV === 'production') {
     });
   } catch (err) {
     console.error('Build directory not found:', err);
-    console.error('Available directories:', fs.readdirSync(process.cwd()));
+    console.error('Available directories:', fs.readdirSync(__dirname));
   }
 }
 

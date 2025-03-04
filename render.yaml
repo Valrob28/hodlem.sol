@@ -15,6 +15,9 @@ services:
       ls -la client
       echo "Client build directory contents:"
       ls -la client/build
+      echo "Moving build to correct location..."
+      mkdir -p /opt/render/project/src/client/build
+      cp -r client/build/* /opt/render/project/src/client/build/
     startCommand: npm start
     envVars:
       - key: NODE_ENV
