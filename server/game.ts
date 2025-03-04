@@ -11,10 +11,13 @@ interface Player {
   chips: number;
   cards: Card[];
   isActive: boolean;
+  isSpectator: boolean;
 }
 
 interface GameState {
   players: Player[];
+  spectators: Player[];
+  waitingList: Player[];
   pot: number;
   currentBet: number;
   communityCards: Card[];
@@ -30,11 +33,14 @@ export class PokerGame {
   private readonly SMALL_BLIND = 50;
   private readonly BIG_BLIND = 100;
   private readonly INITIAL_CHIPS = 10000;
+  private readonly MAX_PLAYERS = 10;
 
   constructor(io: Server) {
     this.io = io;
     this.gameState = {
       players: [],
+      spectators: [],
+      waitingList: [],
       pot: 0,
       currentBet: 0,
       communityCards: [],
@@ -67,21 +73,24 @@ export class PokerGame {
     return deck;
   }
 
-  public addPlayer(socket: Socket, name: string): void {
-    if (this.gameState.players.length >= 10) {
-      socket.emit('error', 'La table est pleine');
-      return;
-    }
-
+  public addPlayer(socket: Socket, name: string, isSpectator: boolean = false): void {
     const newPlayer: Player = {
       id: socket.id,
       name,
       chips: this.INITIAL_CHIPS,
       cards: [],
       isActive: true,
+      isSpectator: isSpectator,
     };
 
-    this.gameState.players.push(newPlayer);
+    if (isSpectator) {
+      this.gameState.spectators.push(newPlayer);
+    } else if (this.gameState.players.length >= this.MAX_PLAYERS) {
+      this.gameState.waitingList.push(newPlayer);
+    } else {
+      this.gameState.players.push(newPlayer);
+    }
+
     socket.emit('playerId', socket.id);
     this.broadcastGameState();
 
@@ -92,6 +101,40 @@ export class PokerGame {
 
   public removePlayer(socketId: string): void {
     this.gameState.players = this.gameState.players.filter(p => p.id !== socketId);
+    this.gameState.spectators = this.gameState.spectators.filter(p => p.id !== socketId);
+    this.gameState.waitingList = this.gameState.waitingList.filter(p => p.id !== socketId);
+    this.broadcastGameState();
+  }
+
+  public joinGame(socketId: string): void {
+    const spectator = this.gameState.spectators.find(p => p.id === socketId);
+    if (!spectator) return;
+
+    if (this.gameState.players.length >= this.MAX_PLAYERS) {
+      this.gameState.waitingList.push(spectator);
+    } else {
+      this.gameState.players.push(spectator);
+    }
+    this.gameState.spectators = this.gameState.spectators.filter(p => p.id !== socketId);
+    this.broadcastGameState();
+  }
+
+  public leaveGame(socketId: string): void {
+    const player = this.gameState.players.find(p => p.id === socketId);
+    if (!player) return;
+
+    this.gameState.spectators.push(player);
+    this.gameState.players = this.gameState.players.filter(p => p.id !== socketId);
+    this.broadcastGameState();
+  }
+
+  private checkWaitingList(): void {
+    while (this.gameState.players.length < this.MAX_PLAYERS && this.gameState.waitingList.length > 0) {
+      const nextPlayer = this.gameState.waitingList.shift();
+      if (nextPlayer) {
+        this.gameState.players.push(nextPlayer);
+      }
+    }
     this.broadcastGameState();
   }
 
@@ -118,6 +161,7 @@ export class PokerGame {
     this.gameState.pot = this.SMALL_BLIND + this.BIG_BLIND;
     this.gameState.currentBet = this.BIG_BLIND;
 
+    this.checkWaitingList();
     this.broadcastGameState();
   }
 

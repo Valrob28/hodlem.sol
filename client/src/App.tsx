@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Box, Container, Typography, Paper, TextField, Button, Grid } from '@mui/material';
+import { Box, Container, Typography, Paper, TextField, Button, Grid, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
 import { io } from 'socket.io-client';
 import BitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
 import Player from './components/Player';
@@ -21,10 +21,13 @@ interface Player {
   chips: number;
   cards: Array<{ value: string; suit: string }>;
   isActive: boolean;
+  isSpectator: boolean;
 }
 
 interface GameState {
   players: Player[];
+  spectators: Player[];
+  waitingList: Player[];
   pot: number;
   currentBet: number;
   communityCards: Array<{ value: string; suit: string }>;
@@ -39,6 +42,8 @@ function App() {
   const [cryptoPrices, setCryptoPrices] = useState<CryptoPrices | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [playerId, setPlayerId] = useState<string | null>(null);
+  const [isSpectator, setIsSpectator] = useState(false);
+  const [showJoinDialog, setShowJoinDialog] = useState(false);
 
   useEffect(() => {
     socket.on('connect', () => {
@@ -64,9 +69,18 @@ function App() {
 
   const handleJoinGame = () => {
     if (playerName.trim()) {
-      socket.emit('joinGame', playerName);
+      socket.emit('joinGame', { name: playerName, isSpectator });
       setIsConnected(true);
+      setShowJoinDialog(false);
     }
+  };
+
+  const handleJoinAsPlayer = () => {
+    socket.emit('joinAsPlayer');
+  };
+
+  const handleLeaveGame = () => {
+    socket.emit('leaveGame');
   };
 
   const handleFold = () => {
@@ -87,6 +101,11 @@ function App() {
       return positions[index] || 'bottom';
     }
     return 'bottom';
+  };
+
+  const getWaitingListPosition = (index: number): 'top' | 'bottom' | 'left' | 'right' => {
+    const positions: ('top' | 'bottom' | 'left' | 'right')[] = ['bottom', 'right', 'top', 'left'];
+    return positions[index % 4];
   };
 
   return (
@@ -138,16 +157,36 @@ function App() {
             <Typography variant="h4" color="white" gutterBottom>
               Bienvenue sur WEN Poker
             </Typography>
-            <TextField
-              label="Votre pseudo"
-              variant="outlined"
-              value={playerName}
-              onChange={(e) => setPlayerName(e.target.value)}
-              sx={{ mb: 2 }}
-            />
+            <Dialog open={showJoinDialog} onClose={() => setShowJoinDialog(false)}>
+              <DialogTitle>Rejoindre la partie</DialogTitle>
+              <DialogContent>
+                <TextField
+                  label="Votre pseudo"
+                  variant="outlined"
+                  value={playerName}
+                  onChange={(e) => setPlayerName(e.target.value)}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                />
+                <Button
+                  variant={isSpectator ? "outlined" : "contained"}
+                  onClick={() => setIsSpectator(!isSpectator)}
+                  fullWidth
+                  sx={{ mb: 2 }}
+                >
+                  {isSpectator ? "Mode Spectateur" : "Mode Joueur"}
+                </Button>
+              </DialogContent>
+              <DialogActions>
+                <Button onClick={() => setShowJoinDialog(false)}>Annuler</Button>
+                <Button onClick={handleJoinGame} variant="contained">
+                  Rejoindre
+                </Button>
+              </DialogActions>
+            </Dialog>
             <Button
               variant="contained"
-              onClick={handleJoinGame}
+              onClick={() => setShowJoinDialog(true)}
               sx={{ backgroundColor: '#f7931a' }}
             >
               Rejoindre la table
@@ -166,6 +205,44 @@ function App() {
                 position={getPlayerPosition(index)}
                 isCurrentPlayer={player.id === playerId && gameState.currentPlayer === index}
               />
+            ))}
+
+            {/* Affichage des spectateurs */}
+            {gameState?.spectators.map((spectator, index) => (
+              <Box
+                key={spectator.id}
+                sx={{
+                  position: 'absolute',
+                  right: 20,
+                  top: 20 + index * 40,
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  color: 'white',
+                  padding: 1,
+                  borderRadius: 1,
+                }}
+              >
+                <Typography variant="body2">{spectator.name} (Spectateur)</Typography>
+              </Box>
+            ))}
+
+            {/* Affichage de la file d'attente */}
+            {gameState?.waitingList.map((player, index) => (
+              <Box
+                key={player.id}
+                sx={{
+                  position: 'absolute',
+                  ...(getWaitingListPosition(index) === 'bottom' && { bottom: 20 + index * 40, left: '50%', transform: 'translateX(-50%)' }),
+                  ...(getWaitingListPosition(index) === 'top' && { top: 20 + index * 40, left: '50%', transform: 'translateX(-50%)' }),
+                  ...(getWaitingListPosition(index) === 'left' && { left: 20, top: '50%', transform: 'translateY(-50%)' }),
+                  ...(getWaitingListPosition(index) === 'right' && { right: 20, top: '50%', transform: 'translateY(-50%)' }),
+                  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+                  color: 'white',
+                  padding: 1,
+                  borderRadius: 1,
+                }}
+              >
+                <Typography variant="body2">{player.name} (En attente)</Typography>
+              </Box>
             ))}
 
             {/* Cartes communes */}
@@ -205,15 +282,41 @@ function App() {
 
             {/* Actions du jeu */}
             {gameState && playerId && (
-              <GameActions
-                currentBet={gameState.currentBet}
-                minRaise={gameState.minRaise}
-                playerChips={gameState.players.find(p => p.id === playerId)?.chips || 0}
-                onFold={handleFold}
-                onCall={handleCall}
-                onRaise={handleRaise}
-                isCurrentPlayer={gameState.players.findIndex(p => p.id === playerId) === gameState.currentPlayer}
-              />
+              <>
+                {isSpectator ? (
+                  <Box
+                    sx={{
+                      position: 'absolute',
+                      bottom: 20,
+                      left: '50%',
+                      transform: 'translateX(-50%)',
+                      display: 'flex',
+                      gap: 2,
+                      backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                      padding: 2,
+                      borderRadius: 2,
+                    }}
+                  >
+                    <Button
+                      variant="contained"
+                      onClick={handleJoinAsPlayer}
+                      sx={{ backgroundColor: '#f7931a' }}
+                    >
+                      Rejoindre la partie
+                    </Button>
+                  </Box>
+                ) : (
+                  <GameActions
+                    currentBet={gameState.currentBet}
+                    minRaise={gameState.minRaise}
+                    playerChips={gameState.players.find(p => p.id === playerId)?.chips || 0}
+                    onFold={handleFold}
+                    onCall={handleCall}
+                    onRaise={handleRaise}
+                    isCurrentPlayer={gameState.players.findIndex(p => p.id === playerId) === gameState.currentPlayer}
+                  />
+                )}
+              </>
             )}
           </>
         )}

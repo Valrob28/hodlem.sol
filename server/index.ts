@@ -3,6 +3,7 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import axios from 'axios';
 import cors from 'cors';
+import path from 'path';
 import { PokerGame } from './game';
 
 const app = express();
@@ -12,6 +13,16 @@ app.use(cors({
   origin: CLIENT_URL,
   methods: ['GET', 'POST']
 }));
+
+// Servir les fichiers statiques du frontend en production
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static(path.join(__dirname, '../client/build')));
+  
+  // Gérer toutes les autres routes en renvoyant index.html
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(__dirname, '../client/build/index.html'));
+  });
+}
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -74,8 +85,16 @@ setInterval(async () => {
 io.on('connection', (socket) => {
   console.log('Un joueur s\'est connecté');
 
-  socket.on('joinGame', (playerName: string) => {
-    game.addPlayer(socket, playerName);
+  socket.on('joinGame', (data: { name: string; isSpectator: boolean }) => {
+    game.addPlayer(socket, data.name, data.isSpectator);
+  });
+
+  socket.on('joinAsPlayer', () => {
+    game.joinGame(socket.id);
+  });
+
+  socket.on('leaveGame', () => {
+    game.leaveGame(socket.id);
   });
 
   socket.on('fold', () => {
