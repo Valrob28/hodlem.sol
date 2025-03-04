@@ -18,40 +18,28 @@ app.use(cors({
 
 // Servir les fichiers statiques du frontend en production
 if (process.env.NODE_ENV === 'production') {
-  // Essayer différents chemins possibles
-  const possiblePaths = [
-    path.join(__dirname, '../client/build'),
-    path.join(__dirname, '../../client/build'),
-    path.join(__dirname, '../../../client/build'),
-    path.join(__dirname, '../../src/client/build')
-  ];
-
-  let clientBuildPath = '';
+  // Chemin absolu vers le dossier de build
+  const clientBuildPath = path.join(process.cwd(), 'client', 'build');
+  console.log('Current working directory:', process.cwd());
+  console.log('Looking for build directory at:', clientBuildPath);
   
-  // Trouver le premier chemin qui existe
-  for (const buildPath of possiblePaths) {
-    try {
-      fs.accessSync(buildPath);
-      clientBuildPath = buildPath;
-      console.log('Found build directory at:', clientBuildPath);
-      break;
-    } catch (err) {
-      console.log('Path not found:', buildPath);
-    }
-  }
-
-  if (!clientBuildPath) {
-    console.error('No build directory found in any of the expected locations');
-  } else {
-    console.log('Serving static files from:', clientBuildPath);
+  // Vérifier si le dossier existe
+  try {
+    fs.accessSync(clientBuildPath);
+    console.log('Build directory found at:', clientBuildPath);
+    
+    // Servir les fichiers statiques
     app.use(express.static(clientBuildPath));
     
     // Gérer toutes les autres routes en renvoyant index.html
     app.get('*', (req, res) => {
       const indexPath = path.join(clientBuildPath, 'index.html');
-      console.log('Attempting to serve:', indexPath);
+      console.log('Serving index.html from:', indexPath);
       res.sendFile(indexPath);
     });
+  } catch (err) {
+    console.error('Build directory not found:', err);
+    console.error('Available directories:', fs.readdirSync(process.cwd()));
   }
 }
 
