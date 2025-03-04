@@ -20,7 +20,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000
+        value: 3000
       - key: CLIENT_URL
         value: https://hodlem-sol.onrender.com
 

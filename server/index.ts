@@ -9,6 +9,7 @@ import fs from 'fs';
 
 const app = express();
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
+const PORT = parseInt(process.env.PORT || '3000', 10);
 
 app.use(cors({
   origin: CLIENT_URL,
@@ -169,7 +170,9 @@ function startNewHand() {
   io.emit('gameState', gameState);
 }
 
-const PORT = process.env.PORT || 5000;
-httpServer.listen(PORT, () => {
+// Démarrage du serveur
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
+  console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+  console.log(`CLIENT_URL: ${CLIENT_URL}`);
 }); 
