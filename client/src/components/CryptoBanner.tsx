@@ -1,5 +1,5 @@
 import React from 'react';
-import { Paper, Grid, Typography, Box } from '@mui/material';
+import { Box, Typography, Paper } from '@mui/material';
 import BitcoinIcon from '@mui/icons-material/CurrencyBitcoin';
 
 interface CryptoPrices {
@@ -13,28 +13,36 @@ interface CryptoBannerProps {
 }
 
 const CryptoBanner: React.FC<CryptoBannerProps> = ({ prices }) => {
+  if (!prices) return null;
+
   return (
-    <Paper sx={{ p: 2, backgroundColor: '#1a1a1a', color: 'white' }}>
-      <Grid container spacing={2} alignItems="center">
-        <Grid item xs={12} md={4}>
-          <Box display="flex" alignItems="center">
-            <BitcoinIcon sx={{ mr: 1, color: '#f7931a' }} />
-            <Typography>
-              BTC: ${prices?.bitcoin.usd.toLocaleString() || '---'}
-            </Typography>
-          </Box>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Typography>
-            ETH: ${prices?.ethereum.usd.toLocaleString() || '---'}
-          </Typography>
-        </Grid>
-        <Grid item xs={12} md={4}>
-          <Typography>
-            SOL: ${prices?.solana.usd.toLocaleString() || '---'}
-          </Typography>
-        </Grid>
-      </Grid>
+    <Paper
+      elevation={2}
+      sx={{
+        p: 1,
+        backgroundColor: 'primary.main',
+        color: 'white',
+        display: 'flex',
+        justifyContent: 'center',
+        gap: 3,
+      }}
+    >
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <BitcoinIcon />
+        <Typography variant="body2">
+          BTC: ${prices.bitcoin.usd.toLocaleString()}
+        </Typography>
+      </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="body2">
+          ETH: ${prices.ethereum.usd.toLocaleString()}
+        </Typography>
+      </Box>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+        <Typography variant="body2">
+          SOL: ${prices.solana.usd.toLocaleString()}
+        </Typography>
+      </Box>
     </Paper>
   );
 };

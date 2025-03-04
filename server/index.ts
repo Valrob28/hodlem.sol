@@ -27,7 +27,7 @@ app.use(cors({
 if (process.env.NODE_ENV === 'production') {
   console.log('Running in production mode');
   
-  // Chemin relatif au dossier build
+  // Chemin vers le dossier build
   const clientBuildPath = path.join(process.cwd(), 'client', 'build');
   
   console.log('Looking for build directory at:', clientBuildPath);
@@ -37,14 +37,13 @@ if (process.env.NODE_ENV === 'production') {
     console.log('Found build directory at:', clientBuildPath);
     console.log('Build directory contents:', fs.readdirSync(clientBuildPath));
     
+    // Servir les fichiers statiques
     app.use(express.static(clientBuildPath));
     
     // Gérer toutes les autres routes en renvoyant index.html
     app.get('*', (req, res) => {
       console.log('Request received for:', req.path);
-      const indexPath = path.join(clientBuildPath, 'index.html');
-      console.log('Serving index.html from:', indexPath);
-      res.sendFile(indexPath);
+      res.sendFile(path.join(clientBuildPath, 'index.html'));
     });
   } catch (err) {
     console.error('Error accessing build directory:', err);

@@ -25,13 +25,4 @@ services:
       - key: PORT
         value: 3000
       - key: CLIENT_URL
-        value: https://hodlem-sol.onrender.com
-
-  - type: web
-    name: hodlem-sol-frontend
-    env: static
-    buildCommand: cd client && npm install && npm run build
-    staticPublishPath: ./client/build
-    envVars:
-      - key: REACT_APP_API_URL
-        value: https://hodlem-sol-backend.onrender.com 
+        value: https://hodlem-sol.onrender.com 

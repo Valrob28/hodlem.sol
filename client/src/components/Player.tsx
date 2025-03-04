@@ -3,70 +3,76 @@ import { Box, Typography, Paper } from '@mui/material';
 import Card from './Card';
 
 interface PlayerProps {
-  name: string;
-  chips: number;
-  cards: Array<{ value: string; suit: string }>;
-  isActive: boolean;
-  position: 'top' | 'bottom' | 'left' | 'right';
-  isCurrentPlayer: boolean;
+  player: {
+    name: string;
+    chips: number;
+    cards: Array<{ value: string; suit: string }>;
+    isActive: boolean;
+    isSpectator: boolean;
+  };
+  isCurrentPlayer?: boolean;
+  isSpectator?: boolean;
+  isWaiting?: boolean;
+  isMobile?: boolean;
 }
 
 const Player: React.FC<PlayerProps> = ({
-  name,
-  chips,
-  cards,
-  isActive,
-  position,
-  isCurrentPlayer,
+  player,
+  isCurrentPlayer = false,
+  isSpectator = false,
+  isWaiting = false,
+  isMobile = false,
 }) => {
-  const getPositionStyle = () => {
-    switch (position) {
-      case 'top':
-        return { top: 20, left: '50%', transform: 'translateX(-50%)' };
-      case 'bottom':
-        return { bottom: 20, left: '50%', transform: 'translateX(-50%)' };
-      case 'left':
-        return { left: 20, top: '50%', transform: 'translateY(-50%)' };
-      case 'right':
-        return { right: 20, top: '50%', transform: 'translateY(-50%)' };
-      default:
-        return {};
-    }
-  };
-
   return (
-    <Box
+    <Paper
+      elevation={isCurrentPlayer ? 8 : 2}
       sx={{
-        position: 'absolute',
-        ...getPositionStyle(),
-        display: 'flex',
-        flexDirection: position === 'left' || position === 'right' ? 'row' : 'column',
-        alignItems: 'center',
-        gap: 1,
+        p: isMobile ? 1 : 2,
+        backgroundColor: isCurrentPlayer ? 'primary.main' : 'background.paper',
+        border: isCurrentPlayer ? '2px solid' : 'none',
+        borderColor: 'secondary.main',
+        opacity: isSpectator ? 0.7 : 1,
+        transition: 'all 0.3s ease',
       }}
     >
-      <Paper
+      <Typography
+        variant={isMobile ? 'body2' : 'subtitle1'}
         sx={{
-          p: 2,
-          backgroundColor: isCurrentPlayer ? '#f7931a' : 'rgba(0, 0, 0, 0.5)',
-          color: 'white',
-          minWidth: 150,
+          color: isCurrentPlayer ? 'white' : 'text.primary',
+          textAlign: 'center',
+          mb: 1,
         }}
       >
-        <Typography variant="subtitle1">{name}</Typography>
-        <Typography variant="body2">{chips} WEN</Typography>
-      </Paper>
-      <Box sx={{ display: 'flex', gap: 1 }}>
-        {cards.map((card, index) => (
+        {player.name}
+      </Typography>
+      <Typography
+        variant={isMobile ? 'caption' : 'body2'}
+        sx={{
+          color: isCurrentPlayer ? 'white' : 'text.secondary',
+          textAlign: 'center',
+          mb: 1,
+        }}
+      >
+        {player.chips} jetons
+      </Typography>
+      <Box
+        sx={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: isMobile ? 0.5 : 1,
+        }}
+      >
+        {player.cards.map((card, index) => (
           <Card
             key={index}
             value={card.value}
             suit={card.suit}
-            hidden={!isActive}
+            hidden={isWaiting}
+            isMobile={isMobile}
           />
         ))}
       </Box>
-    </Box>
+    </Paper>
   );
 };
 

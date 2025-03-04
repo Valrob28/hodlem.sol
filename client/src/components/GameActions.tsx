@@ -1,71 +1,73 @@
-import React from 'react';
-import { Box, Button, Typography } from '@mui/material';
+import React, { useState } from 'react';
+import { Box, Button, TextField, Stack } from '@mui/material';
 
 interface GameActionsProps {
-  currentBet: number;
-  minRaise: number;
-  playerChips: number;
   onFold: () => void;
   onCall: () => void;
   onRaise: (amount: number) => void;
-  isCurrentPlayer: boolean;
+  currentBet: number;
+  isMobile?: boolean;
 }
 
 const GameActions: React.FC<GameActionsProps> = ({
-  currentBet,
-  minRaise,
-  playerChips,
   onFold,
   onCall,
   onRaise,
-  isCurrentPlayer,
+  currentBet,
+  isMobile = false,
 }) => {
-  const callAmount = currentBet;
-  const canRaise = playerChips > minRaise;
+  const [raiseAmount, setRaiseAmount] = useState(currentBet);
 
-  if (!isCurrentPlayer) {
-    return null;
-  }
+  const handleRaise = () => {
+    if (raiseAmount > currentBet) {
+      onRaise(raiseAmount);
+    }
+  };
 
   return (
-    <Box
+    <Stack
+      direction={isMobile ? 'column' : 'row'}
+      spacing={isMobile ? 1 : 2}
       sx={{
-        position: 'absolute',
-        bottom: 20,
-        left: '50%',
-        transform: 'translateX(-50%)',
-        display: 'flex',
-        gap: 2,
-        backgroundColor: 'rgba(0, 0, 0, 0.7)',
-        padding: 2,
-        borderRadius: 2,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        p: isMobile ? 1 : 2,
+        borderRadius: 1,
       }}
     >
       <Button
         variant="contained"
         color="error"
         onClick={onFold}
-        sx={{ backgroundColor: '#d32f2f' }}
+        size={isMobile ? 'small' : 'medium'}
       >
         Se coucher
       </Button>
       <Button
         variant="contained"
+        color="primary"
         onClick={onCall}
-        disabled={playerChips < callAmount}
-        sx={{ backgroundColor: '#1976d2' }}
+        size={isMobile ? 'small' : 'medium'}
       >
-        Suivre ({callAmount} WEN)
+        Suivre ({currentBet})
       </Button>
-      <Button
-        variant="contained"
-        onClick={() => onRaise(minRaise)}
-        disabled={!canRaise}
-        sx={{ backgroundColor: '#2e7d32' }}
-      >
-        Relancer ({minRaise} WEN)
-      </Button>
-    </Box>
+      <Box sx={{ display: 'flex', gap: 1 }}>
+        <TextField
+          type="number"
+          value={raiseAmount}
+          onChange={(e) => setRaiseAmount(Number(e.target.value))}
+          size={isMobile ? 'small' : 'medium'}
+          sx={{ width: isMobile ? '100px' : '150px' }}
+        />
+        <Button
+          variant="contained"
+          color="secondary"
+          onClick={handleRaise}
+          size={isMobile ? 'small' : 'medium'}
+        >
+          Relancer
+        </Button>
+      </Box>
+    </Stack>
   );
 };
 
