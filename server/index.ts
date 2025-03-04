@@ -19,11 +19,21 @@ if (process.env.NODE_ENV === 'production') {
   const clientBuildPath = path.join(__dirname, '../client/build');
   console.log('Serving static files from:', clientBuildPath);
   
+  // Vérifier si le dossier existe
+  try {
+    require('fs').accessSync(clientBuildPath);
+    console.log('Build directory exists');
+  } catch (err) {
+    console.error('Build directory not found:', err);
+  }
+  
   app.use(express.static(clientBuildPath));
   
   // Gérer toutes les autres routes en renvoyant index.html
   app.get('*', (req, res) => {
-    res.sendFile(path.join(clientBuildPath, 'index.html'));
+    const indexPath = path.join(clientBuildPath, 'index.html');
+    console.log('Attempting to serve:', indexPath);
+    res.sendFile(indexPath);
   });
 }
 
