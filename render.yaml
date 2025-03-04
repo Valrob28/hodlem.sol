@@ -7,6 +7,13 @@ services:
       cd client && npm install && npm run build
       cd ..
       npm run build
+      echo "Current directory:"
+      pwd
+      echo "Directory contents:"
+      ls -la
+      echo "Client directory contents:"
+      ls -la client
+      echo "Client build directory contents:"
       ls -la client/build
     startCommand: npm start
     envVars:
