@@ -27,17 +27,38 @@ app.use(cors({
 if (process.env.NODE_ENV === 'production') {
   console.log('Running in production mode');
   
-  // Chemin vers le dossier build
-  const clientBuildPath = path.join(process.cwd(), 'client', 'build');
+  // Essayer différents chemins possibles
+  const possiblePaths = [
+    path.join(process.cwd(), 'client', 'build'),
+    path.join(process.cwd(), 'src', 'client', 'build'),
+    path.join(__dirname, 'client', 'build'),
+    path.join(__dirname, '../client', 'build'),
+    path.join(__dirname, '../../client', 'build')
+  ];
+
+  console.log('Trying possible build paths:', possiblePaths);
   
-  console.log('Looking for build directory at:', clientBuildPath);
+  let clientBuildPath = '';
   
-  try {
-    fs.accessSync(clientBuildPath);
-    console.log('Found build directory at:', clientBuildPath);
-    console.log('Build directory contents:', fs.readdirSync(clientBuildPath));
-    
-    // Servir les fichiers statiques
+  // Trouver le premier chemin qui existe
+  for (const buildPath of possiblePaths) {
+    try {
+      fs.accessSync(buildPath);
+      clientBuildPath = buildPath;
+      console.log('Found build directory at:', clientBuildPath);
+      console.log('Build directory contents:', fs.readdirSync(clientBuildPath));
+      break;
+    } catch (err) {
+      console.log('Path not found:', buildPath);
+    }
+  }
+
+  if (!clientBuildPath) {
+    console.error('No build directory found in any of the expected locations');
+    console.error('Available directories in current directory:', fs.readdirSync(__dirname));
+    console.error('Available directories in working directory:', fs.readdirSync(process.cwd()));
+  } else {
+    console.log('Serving static files from:', clientBuildPath);
     app.use(express.static(clientBuildPath));
     
     // Gérer toutes les autres routes en renvoyant index.html
@@ -45,9 +66,6 @@ if (process.env.NODE_ENV === 'production') {
       console.log('Request received for:', req.path);
       res.sendFile(path.join(clientBuildPath, 'index.html'));
     });
-  } catch (err) {
-    console.error('Error accessing build directory:', err);
-    console.error('Available directories in working directory:', fs.readdirSync(process.cwd()));
   }
 }
 
