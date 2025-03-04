@@ -11,6 +11,11 @@ const app = express();
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
+console.log('Starting server with configuration:');
+console.log('NODE_ENV:', process.env.NODE_ENV);
+console.log('PORT:', PORT);
+console.log('CLIENT_URL:', CLIENT_URL);
+
 app.use(cors({
   origin: CLIENT_URL,
   methods: ['GET', 'POST']
@@ -18,17 +23,40 @@ app.use(cors({
 
 // Servir les fichiers statiques du frontend en production
 if (process.env.NODE_ENV === 'production') {
-  // Chemin absolu vers le dossier de build
-  const clientBuildPath = path.join(__dirname, 'client', 'build');
-  console.log('Current directory:', __dirname);
-  console.log('Looking for build directory at:', clientBuildPath);
+  console.log('Running in production mode');
   
-  // Vérifier si le dossier existe
-  try {
-    fs.accessSync(clientBuildPath);
-    console.log('Build directory found at:', clientBuildPath);
-    
-    // Servir les fichiers statiques
+  // Essayer différents chemins possibles
+  const possiblePaths = [
+    path.join(__dirname, 'client', 'build'),
+    path.join(__dirname, '../client', 'build'),
+    path.join(__dirname, '../../client', 'build'),
+    path.join(process.cwd(), 'client', 'build'),
+    path.join(process.cwd(), 'src', 'client', 'build')
+  ];
+
+  console.log('Current directory:', __dirname);
+  console.log('Current working directory:', process.cwd());
+  
+  let clientBuildPath = '';
+  
+  // Trouver le premier chemin qui existe
+  for (const buildPath of possiblePaths) {
+    try {
+      fs.accessSync(buildPath);
+      clientBuildPath = buildPath;
+      console.log('Found build directory at:', clientBuildPath);
+      break;
+    } catch (err) {
+      console.log('Path not found:', buildPath);
+    }
+  }
+
+  if (!clientBuildPath) {
+    console.error('No build directory found in any of the expected locations');
+    console.error('Available directories in current directory:', fs.readdirSync(__dirname));
+    console.error('Available directories in working directory:', fs.readdirSync(process.cwd()));
+  } else {
+    console.log('Serving static files from:', clientBuildPath);
     app.use(express.static(clientBuildPath));
     
     // Gérer toutes les autres routes en renvoyant index.html
@@ -37,11 +65,13 @@ if (process.env.NODE_ENV === 'production') {
       console.log('Serving index.html from:', indexPath);
       res.sendFile(indexPath);
     });
-  } catch (err) {
-    console.error('Build directory not found:', err);
-    console.error('Available directories:', fs.readdirSync(__dirname));
   }
 }
+
+// Route de test pour vérifier que le serveur fonctionne
+app.get('/api/test', (req, res) => {
+  res.json({ message: 'Server is running!' });
+});
 
 const httpServer = createServer(app);
 const io = new Server(httpServer, {
@@ -163,4 +193,6 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Serveur démarré sur le port ${PORT}`);
   console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
   console.log(`CLIENT_URL: ${CLIENT_URL}`);
+  console.log(`Current directory: ${__dirname}`);
+  console.log(`Working directory: ${process.cwd()}`);
 }); 

@@ -3,9 +3,12 @@ services:
     name: hodlem-sol
     env: node
     buildCommand: |
+      echo "Starting build process..."
       npm install
+      echo "Building client..."
       cd client && npm install && npm run build
       cd ..
+      echo "Building server..."
       npm run build
       echo "Current directory:"
       pwd
@@ -18,6 +21,8 @@ services:
       echo "Moving build to correct location..."
       mkdir -p /opt/render/project/src/client/build
       cp -r client/build/* /opt/render/project/src/client/build/
+      echo "Final directory structure:"
+      ls -la /opt/render/project/src/client/build
     startCommand: npm start
     envVars:
       - key: NODE_ENV
