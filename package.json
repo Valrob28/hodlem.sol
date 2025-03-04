@@ -11,7 +11,8 @@
     "dev:full": "concurrently \"npm run dev\" \"npm run client\"",
     "build:client": "cd client && npm install && npm run build",
     "build:server": "tsc",
-    "build:prod": "npm run build:client && npm run build:server"
+    "build:prod": "npm run build:client && npm run build:server",
+    "postinstall": "cd client && npm install"
   },
   "dependencies": {
     "express": "^4.18.2",
