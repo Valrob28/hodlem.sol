@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: hodlem-sol-backend
+    env: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: CLIENT_URL
+        value: https://hodlem-sol-frontend.onrender.com
+
+  - type: web
+    name: hodlem-sol-frontend
+    env: static
+    buildCommand: cd client && npm install && npm run build
+    staticPublishPath: ./client/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://hodlem-sol-backend.onrender.com 
