@@ -96,9 +96,9 @@ class DatabaseService {
                 .from('table_players')
                 .insert([
                     {
+                        id: playerId,
                         table_id: tableId,
-                        player_id: playerId,
-                        player_name: playerName,
+                        name: playerName,
                         position: position,
                         chips: buyIn,
                         folded: false,
