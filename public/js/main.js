@@ -170,11 +170,12 @@ class PokerApp {
     }
 
     startGame() {
-        if (this.currentTableId) {
+        if (this.currentTableId && this.playerName) {
             console.log('Démarrage de la partie');
             this.websocket.send({
                 type: 'START_GAME',
-                tableId: this.currentTableId
+                tableId: this.currentTableId,
+                playerName: this.playerName
             });
         }
     }

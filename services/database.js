@@ -1,4 +1,5 @@
 const supabase = require('../config/supabase');
+const { v4: uuidv4 } = require('uuid');
 
 class DatabaseService {
     constructor() {
@@ -92,11 +93,12 @@ class DatabaseService {
     async addPlayerToTable(tableId, playerId, playerName, position, buyIn = 1000) {
         console.log('Ajout d\'un joueur à la table:', { tableId, playerId, playerName, position, buyIn });
         try {
+            const playerUuid = uuidv4();
             const { data, error } = await supabase
                 .from('table_players')
                 .insert([
                     {
-                        id: playerId,
+                        id: playerUuid,
                         table_id: tableId,
                         name: playerName,
                         position: position,
