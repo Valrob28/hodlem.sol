@@ -3,9 +3,8 @@ class PokerApp {
         this.table = new PokerTable();
         this.game = new PokerGame();
         this.websocket = new WebSocketManager();
-        this.cryptoTicker = new CryptoTicker();
         
-        this.currentTableId = null;
+        this.currentTableId = 'default-table';
         this.playerId = null;
         this.playerName = null;
         
@@ -28,9 +27,8 @@ class PokerApp {
 
     setupEventListeners() {
         // Gestionnaires pour le menu principal
-        document.getElementById('create-table').addEventListener('click', () => this.createTable());
-        document.getElementById('join-table').addEventListener('click', () => this.showJoinTableDialog());
-        document.getElementById('view-only').addEventListener('click', () => this.enterViewOnlyMode());
+        document.getElementById('join-as-player').addEventListener('click', () => this.joinAsPlayer());
+        document.getElementById('join-as-spectator').addEventListener('click', () => this.joinAsSpectator());
 
         // Gestionnaires pour les contrôles de jeu
         document.getElementById('fold').addEventListener('click', () => this.fold());
@@ -66,55 +64,18 @@ class PokerApp {
         window.addEventListener('serverError', (event) => {
             this.handleServerError(event.detail);
         });
-
-        // Gestionnaire pour la création de table
-        window.addEventListener('tableCreated', (event) => {
-            this.handleTableCreated(event.detail);
-        });
     }
 
-    createTable() {
-        console.log('Tentative de création de table');
-        this.websocket.createTable();
-    }
-
-    handleTableCreated(data) {
-        console.log('Table créée:', data);
-        this.currentTableId = data.tableId;
-        this.playerId = data.playerId;
-        this.playerName = 'Host';
-        
-        // Afficher l'interface de jeu
-        document.getElementById('main-menu').classList.add('hidden');
-        document.getElementById('game-ui').classList.remove('hidden');
-        
-        // Mettre à jour l'affichage du joueur
-        document.getElementById('player-name').textContent = this.playerName;
-        document.getElementById('player-chips').textContent = '1000';
-    }
-
-    showJoinTableDialog() {
-        const tableId = prompt('Entrez l\'ID de la table :');
-        if (tableId) {
-            this.playerName = prompt('Entrez votre nom :');
-            if (this.playerName) {
-                this.joinTable(tableId);
-            }
+    joinAsPlayer() {
+        this.playerName = prompt('Entrez votre nom :');
+        if (this.playerName) {
+            this.websocket.joinTable(this.currentTableId, this.playerName);
         }
     }
 
-    joinTable(tableId) {
-        console.log('Tentative de rejoindre la table:', tableId);
-        this.currentTableId = tableId;
-        this.websocket.joinTable(tableId, this.playerName);
-    }
-
-    enterViewOnlyMode() {
-        const tableId = prompt('Entrez l\'ID de la table :');
-        if (tableId) {
-            this.currentTableId = tableId;
-            this.websocket.joinTable(tableId, 'Spectateur');
-        }
+    joinAsSpectator() {
+        this.playerName = 'Spectateur';
+        this.websocket.joinTable(this.currentTableId, this.playerName);
     }
 
     updateTableState(state) {
@@ -219,7 +180,5 @@ class PokerApp {
     }
 }
 
-// Initialisation de l'application
-document.addEventListener('DOMContentLoaded', () => {
-    const app = new PokerApp();
-}); 
+// Initialiser l'application
+const app = new PokerApp(); 

@@ -8,19 +8,21 @@ class PokerTable {
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.renderer.setClearColor(0x1a472a); // Vert foncé pour le feutre
+        this.renderer.shadowMap.enabled = true;
 
         this.table = null;
         this.seats = [];
         this.cards = [];
         this.chips = [];
         this.players = new Map();
+        this.playerTokens = new Map();
+        this.cardMeshes = new Map();
 
         // Agrandir la table
         this.tableRadius = 5; // Augmenté de 3 à 5
         this.tableHeight = 0.5;
         this.createTable();
-        this.createChips();
-        this.createCards();
+        this.createSeats();
         this.setupLights();
         this.setupCamera();
         this.animate();
@@ -200,5 +202,74 @@ class PokerTable {
         this.camera.aspect = window.innerWidth / window.innerHeight;
         this.camera.updateProjectionMatrix();
         this.renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    createChips() {
+        // Création des jetons de poker
+        const chipGeometry = new THREE.CylinderGeometry(0.2, 0.2, 0.1, 16);
+        const chipMaterials = {
+            white: new THREE.MeshPhongMaterial({ color: 0xFFFFFF }),
+            red: new THREE.MeshPhongMaterial({ color: 0xFF0000 }),
+            blue: new THREE.MeshPhongMaterial({ color: 0x0000FF }),
+            green: new THREE.MeshPhongMaterial({ color: 0x00FF00 }),
+            black: new THREE.MeshPhongMaterial({ color: 0x000000 })
+        };
+
+        // Créer un ensemble de jetons pour chaque valeur
+        const chipValues = [
+            { value: 1, material: chipMaterials.white },
+            { value: 5, material: chipMaterials.red },
+            { value: 25, material: chipMaterials.blue },
+            { value: 100, material: chipMaterials.green },
+            { value: 500, material: chipMaterials.black }
+        ];
+
+        chipValues.forEach(({ value, material }) => {
+            const chip = new THREE.Mesh(chipGeometry, material);
+            chip.castShadow = true;
+            chip.receiveShadow = true;
+            this.chips.push({ mesh: chip, value });
+        });
+    }
+
+    setupLights() {
+        // Lumière ambiante
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+        this.scene.add(ambientLight);
+
+        // Lumière directionnelle principale
+        const mainLight = new THREE.DirectionalLight(0xffffff, 1);
+        mainLight.position.set(5, 5, 5);
+        mainLight.castShadow = true;
+        mainLight.shadow.mapSize.width = 2048;
+        mainLight.shadow.mapSize.height = 2048;
+        mainLight.shadow.camera.near = 0.5;
+        mainLight.shadow.camera.far = 50;
+        mainLight.shadow.camera.left = -10;
+        mainLight.shadow.camera.right = 10;
+        mainLight.shadow.camera.top = 10;
+        mainLight.shadow.camera.bottom = -10;
+        this.scene.add(mainLight);
+
+        // Lumière directionnelle secondaire (pour le remplissage)
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.5);
+        fillLight.position.set(-5, 3, -5);
+        this.scene.add(fillLight);
+    }
+
+    setupCamera() {
+        // Position de la caméra
+        this.camera.position.set(0, 8, 12);
+        this.camera.lookAt(0, 0, 0);
+
+        // Ajouter des contrôles de caméra
+        const controls = new THREE.OrbitControls(this.camera, this.renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.minDistance = 8;
+        controls.maxDistance = 20;
+        controls.maxPolarAngle = Math.PI / 2;
+        controls.target.set(0, 0, 0);
+        controls.update();
     }
 } 

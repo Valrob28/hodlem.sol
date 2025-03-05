@@ -6,19 +6,25 @@ class DatabaseService {
     }
 
     // Gestion des tables de poker
-    async createTable(playerId, playerName) {
-        console.log('Création d\'une nouvelle table:', { playerId, playerName });
+    async createTable(playerId, playerName, tableName, buyIn = 1000) {
+        console.log('Création d\'une nouvelle table:', { playerId, playerName, tableName, buyIn });
         try {
             const { data, error } = await supabase
-                .from('tables')
+                .from('poker_tables')
                 .insert([
                     {
-                        created_by: playerId,
-                        created_by_name: playerName,
+                        host_id: playerId,
+                        host_name: playerName,
+                        name: tableName,
+                        status: 'waiting',
                         pot: 0,
                         current_bet: 0,
                         phase: 'WAITING',
-                        community_cards: []
+                        community_cards: [],
+                        min_buy_in: 1000,
+                        max_buy_in: 10000,
+                        small_blind: 10,
+                        big_blind: 20
                     }
                 ])
                 .select()
@@ -41,7 +47,7 @@ class DatabaseService {
         console.log('Récupération de la table:', tableId);
         try {
             const { data, error } = await supabase
-                .from('tables')
+                .from('poker_tables')
                 .select('*')
                 .eq('id', tableId)
                 .single();
@@ -63,7 +69,7 @@ class DatabaseService {
         console.log('Mise à jour de l\'état de la table:', { tableId, state });
         try {
             const { data, error } = await supabase
-                .from('tables')
+                .from('poker_tables')
                 .update(state)
                 .eq('id', tableId)
                 .select()
@@ -83,20 +89,22 @@ class DatabaseService {
     }
 
     // Gestion des joueurs
-    async addPlayerToTable(tableId, playerId, playerName, position) {
-        console.log('Ajout d\'un joueur à la table:', { tableId, playerId, playerName, position });
+    async addPlayerToTable(tableId, playerId, playerName, position, buyIn = 1000) {
+        console.log('Ajout d\'un joueur à la table:', { tableId, playerId, playerName, position, buyIn });
         try {
             const { data, error } = await supabase
-                .from('players')
+                .from('table_players')
                 .insert([
                     {
                         table_id: tableId,
                         player_id: playerId,
                         player_name: playerName,
                         position: position,
-                        chips: 1000,
+                        chips: buyIn,
                         folded: false,
-                        current_bet: 0
+                        current_bet: 0,
+                        cards: [],
+                        is_host: position === 0
                     }
                 ])
                 .select()
@@ -119,7 +127,7 @@ class DatabaseService {
         console.log('Mise à jour de l\'état du joueur:', { tableId, playerId, state });
         try {
             const { data, error } = await supabase
-                .from('players')
+                .from('table_players')
                 .update(state)
                 .eq('table_id', tableId)
                 .eq('player_id', playerId)
@@ -143,7 +151,7 @@ class DatabaseService {
         console.log('Récupération des joueurs de la table:', tableId);
         try {
             const { data, error } = await supabase
-                .from('players')
+                .from('table_players')
                 .select('*')
                 .eq('table_id', tableId);
 
@@ -199,6 +207,65 @@ class DatabaseService {
 
         if (error) throw error;
         return data;
+    }
+
+    async updatePlayerCards(tableId, playerId, cards) {
+        console.log('Mise à jour des cartes du joueur:', { tableId, playerId, cards });
+        try {
+            const { data, error } = await supabase
+                .from('table_players')
+                .update({ cards })
+                .eq('table_id', tableId)
+                .eq('player_id', playerId)
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Erreur lors de la mise à jour des cartes:', error);
+                throw error;
+            }
+
+            console.log('Cartes mises à jour avec succès:', data);
+            return data;
+        } catch (error) {
+            console.error('Erreur dans updatePlayerCards:', error);
+            throw error;
+        }
+    }
+
+    async getAvailableTables() {
+        console.log('Récupération des tables disponibles');
+        try {
+            const { data, error } = await supabase
+                .from('poker_tables')
+                .select(`
+                    id,
+                    name,
+                    host_name,
+                    status,
+                    min_buy_in,
+                    max_buy_in,
+                    small_blind,
+                    big_blind,
+                    players:table_players(count)
+                `)
+                .eq('status', 'waiting')
+                .order('created_at', { ascending: false });
+
+            if (error) {
+                console.error('Erreur lors de la récupération des tables:', error);
+                throw error;
+            }
+
+            console.log('Tables disponibles récupérées:', data);
+            return data.map(table => ({
+                ...table,
+                player_count: table.players[0].count
+            }));
+        } catch (error) {
+            console.error('Erreur dans getAvailableTables:', error);
+            throw error;
+        }
     }
 }
 

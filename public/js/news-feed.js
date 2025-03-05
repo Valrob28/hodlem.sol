@@ -30,14 +30,25 @@ class NewsFeed {
     }
 
     async fetchRSS(url) {
-        const response = await fetch(url);
-        const data = await response.json();
-        return data.items.map(item => ({
-            title: item.title,
-            link: item.link,
-            pubDate: new Date(item.pubDate),
-            source: item.source || 'Twitter'
-        }));
+        try {
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (!data || !data.items) {
+                console.warn('Données RSS invalides:', data);
+                return [];
+            }
+            
+            return data.items.map(item => ({
+                title: item.title || 'Sans titre',
+                link: item.link || '#',
+                pubDate: new Date(item.pubDate || Date.now()),
+                source: item.source || 'Twitter'
+            }));
+        } catch (error) {
+            console.error('Erreur lors de la récupération des flux RSS:', error);
+            return [];
+        }
     }
 
     displayNews(news) {

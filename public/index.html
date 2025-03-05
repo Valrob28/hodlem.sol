@@ -6,6 +6,7 @@
     <title>Hodlem Poker - Table de Poker 3D</title>
     <link rel="stylesheet" href="css/style.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
 </head>
 <body>
@@ -27,11 +28,10 @@
     <div id="ui-overlay">
         <!-- Menu principal -->
         <div id="main-menu" class="ui-panel">
-            <h1>Hodlem Poker</h1>
+            <h1>Poker Game</h1>
             <div class="menu-buttons">
-                <button id="create-table">Créer une table</button>
-                <button id="join-table">Rejoindre une table</button>
-                <button id="view-only">Mode spectateur</button>
+                <button id="join-as-player">Rejoindre comme joueur</button>
+                <button id="join-as-spectator">Rejoindre comme spectateur</button>
             </div>
         </div>
 
@@ -53,9 +53,9 @@
     </div>
 
     <!-- Scripts -->
+    <script src="js/websocket.js"></script>
     <script src="js/game.js"></script>
     <script src="js/table.js"></script>
-    <script src="js/websocket.js"></script>
     <script src="js/crypto-ticker.js"></script>
     <script src="js/news-feed.js"></script>
     <script src="js/main.js"></script>

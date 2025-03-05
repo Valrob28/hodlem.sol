@@ -59,6 +59,7 @@ class WebSocketManager {
         this.messageHandlers.set('GAME_START', this.handleGameStart.bind(this));
         this.messageHandlers.set('ERROR', this.handleError.bind(this));
         this.messageHandlers.set('TABLE_CREATED', this.handleTableCreated.bind(this));
+        this.messageHandlers.set('AVAILABLE_TABLES', this.handleAvailableTables.bind(this));
     }
 
     handleMessage(data) {
@@ -104,6 +105,11 @@ class WebSocketManager {
         window.dispatchEvent(event);
     }
 
+    handleAvailableTables(data) {
+        const event = new CustomEvent('availableTables', { detail: data.tables });
+        window.dispatchEvent(event);
+    }
+
     send(message) {
         if (this.connected) {
             this.socket.send(JSON.stringify(message));
@@ -121,9 +127,11 @@ class WebSocketManager {
         });
     }
 
-    createTable() {
+    createTable(tableName, playerName) {
         this.send({
-            type: 'CREATE_TABLE'
+            type: 'CREATE_TABLE',
+            tableName,
+            playerName
         });
     }
 
