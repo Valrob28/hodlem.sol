@@ -5,416 +5,194 @@
 }
 
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: Arial, sans-serif;
     background-color: #1a1a1a;
-    color: #ffffff;
-    overflow: hidden;
-}
-
-#poker-table {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 1;
-}
-
-#crypto-ticker {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 40px;
-    background-color: rgba(0, 0, 0, 0.8);
-    z-index: 2;
+    color: white;
+    min-height: 100vh;
     display: flex;
+    justify-content: center;
     align-items: center;
-    overflow: hidden;
 }
 
-.ticker-content {
-    white-space: nowrap;
-    animation: ticker 60s linear infinite;
-}
-
-.ad-container {
-    position: fixed;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 160px;
+.game-container {
+    width: 800px;
     height: 600px;
-    background-color: rgba(0, 0, 0, 0.5);
-    z-index: 2;
-}
-
-#ad-left {
-    left: 0;
-}
-
-#ad-right {
-    right: 0;
-}
-
-#ui-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: 3;
-    pointer-events: none;
-}
-
-.ui-panel {
-    position: absolute;
-    background-color: rgba(0, 0, 0, 0.8);
-    border-radius: 10px;
-    padding: 20px;
-    pointer-events: auto;
-}
-
-#main-menu {
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    text-align: center;
-}
-
-.menu-buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
-}
-
-button {
-    padding: 10px 20px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-}
-
-button:hover {
-    background-color: #45a049;
-}
-
-#game-ui {
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-.player-info {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 10px;
-}
-
-.game-controls {
-    display: flex;
-    gap: 10px;
-    align-items: center;
-}
-
-.hidden {
-    display: none;
-}
-
-@keyframes ticker {
-    0% {
-        transform: translateX(100%);
-    }
-    100% {
-        transform: translateX(-100%);
-    }
-}
-
-.news-feed {
-    position: fixed;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    width: 200px;
-    max-height: 60vh;
-    overflow-y: auto;
-    background: rgba(0, 0, 0, 0.8);
-    border-radius: 10px;
-    padding: 10px;
-    color: white;
-    z-index: 1000;
-}
-
-.news-item {
-    margin-bottom: 15px;
-    padding: 10px;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.news-item:last-child {
-    border-bottom: none;
-}
-
-.news-source {
-    display: block;
-    font-size: 0.8em;
-    color: #888;
-    margin-bottom: 5px;
-}
-
-.news-item a {
-    color: white;
-    text-decoration: none;
-    display: block;
-    margin-bottom: 5px;
-}
-
-.news-item a:hover {
-    color: #00ff00;
-}
-
-.news-date {
-    font-size: 0.8em;
-    color: #888;
-}
-
-.create-table-form {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9);
-    padding: 2rem;
-    border-radius: 10px;
-    color: white;
-    text-align: center;
-    z-index: 1000;
-}
-
-.create-table-form h2 {
-    margin-bottom: 1.5rem;
-    color: #ffd700;
-}
-
-.create-table-form input {
-    display: block;
-    width: 100%;
-    margin: 1rem 0;
-    padding: 0.5rem;
-    border: 1px solid #ffd700;
-    background: rgba(0, 0, 0, 0.7);
-    color: white;
-    border-radius: 5px;
-}
-
-.create-table-form button {
-    margin: 0.5rem;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-#confirm-create {
-    background: #ffd700;
-    color: black;
-}
-
-#cancel-create {
-    background: #ff4444;
-    color: white;
-}
-
-.create-table-form button:hover {
-    transform: scale(1.05);
-}
-
-#available-tables {
-    margin-top: 2rem;
-    max-height: 400px;
-    overflow-y: auto;
-    padding: 1rem;
-    background: rgba(0, 0, 0, 0.5);
-    border-radius: 10px;
-}
-
-.table-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 1rem;
-    margin-bottom: 1rem;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 5px;
-    transition: all 0.3s ease;
-}
-
-.table-item:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateX(5px);
-}
-
-.table-info {
-    flex: 1;
-}
-
-.table-info h3 {
-    color: #ffd700;
-    margin-bottom: 0.5rem;
-}
-
-.table-info p {
-    margin: 0.25rem 0;
-    color: #ccc;
-    font-size: 0.9em;
-}
-
-.join-table-btn {
-    background: #4CAF50;
-    color: white;
-    padding: 0.5rem 1rem;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: all 0.3s ease;
-}
-
-.join-table-btn:hover {
-    background: #45a049;
-    transform: scale(1.05);
-}
-
-/* Styles pour le modal de connexion */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
-    z-index: 1000;
-    justify-content: center;
-    align-items: center;
-}
-
-.modal-content {
-    background-color: #1a1a1a;
-    padding: 2rem;
-    border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
-    width: 90%;
-    max-width: 400px;
-}
-
-.modal-content h2 {
-    color: #fff;
-    margin-bottom: 1.5rem;
-    text-align: center;
-}
-
-#login-form {
-    display: flex;
-    flex-direction: column;
-    gap: 1rem;
-}
-
-#player-name-input {
-    padding: 0.8rem;
-    border: 2px solid #333;
-    border-radius: 4px;
     background-color: #2a2a2a;
-    color: #fff;
-    font-size: 1rem;
-}
-
-#player-name-input:focus {
-    outline: none;
-    border-color: #4a90e2;
-}
-
-.modal-buttons {
+    border-radius: 20px;
+    padding: 20px;
     display: flex;
-    gap: 1rem;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+}
+
+.dealer-area, .player-area {
+    text-align: center;
+}
+
+.cards {
+    display: flex;
     justify-content: center;
+    gap: 10px;
+    margin: 20px 0;
+    perspective: 1000px;
 }
 
-.modal-buttons button {
-    padding: 0.8rem 1.5rem;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 1rem;
-    transition: background-color 0.3s;
+.card {
+    width: 70px;
+    height: 100px;
+    background-color: white;
+    border-radius: 10px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: black;
+    font-size: 24px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.5s;
 }
 
-#join-player-submit {
+.card.hidden {
     background-color: #4a90e2;
     color: white;
 }
 
-#join-player-submit:hover {
-    background-color: #357abd;
-}
-
-#join-spectator-submit {
-    background-color: #666;
-    color: white;
-}
-
-#join-spectator-submit:hover {
-    background-color: #555;
-}
-
-/* Styles pour le timer */
-.game-timer {
-    position: fixed;
-    top: 50px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0, 0, 0, 0.8);
-    padding: 10px 20px;
-    border-radius: 5px;
-    color: white;
-    font-size: 1.2em;
-    font-weight: bold;
-    z-index: 1000;
-}
-
-.game-timer.warning {
-    color: #ffd700;
-}
-
-.game-timer.danger {
+.card.red {
     color: #ff4444;
 }
 
-/* Styles pour les actions de jeu */
-.game-controls {
+.pot-area {
+    text-align: center;
+    padding: 20px;
+    background-color: rgba(0,0,0,0.3);
+    border-radius: 10px;
+    margin: 20px 0;
+}
+
+.controls {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    align-items: center;
+}
+
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    transition: all 0.3s;
+}
+
+button:hover {
+    background-color: #45a049;
+    transform: translateY(-2px);
+}
+
+button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.bet-controls {
     display: flex;
     gap: 10px;
     align-items: center;
-    background: rgba(0, 0, 0, 0.8);
-    padding: 15px;
-    border-radius: 10px;
-    margin-top: 10px;
-}
-
-.game-controls button {
-    padding: 8px 16px;
-    font-size: 14px;
-    min-width: 80px;
 }
 
 #bet-slider {
-    width: 150px;
-    margin: 0 10px;
+    width: 200px;
+}
+
+.player-info {
+    margin-bottom: 20px;
+}
+
+.chips {
+    font-size: 20px;
+    font-weight: bold;
+    color: #ffd700;
+}
+
+.stats {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #ccc;
+}
+
+.hand-result {
+    margin-top: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.hand-result.win {
+    color: #4CAF50;
+}
+
+.hand-result.lose {
+    color: #ff4444;
+}
+
+#toggle-sound {
+    background: none;
+    border: none;
+    font-size: 24px;
+    padding: 5px;
+    cursor: pointer;
+}
+
+#toggle-sound:hover {
+    transform: scale(1.1);
+}
+
+/* Animations */
+@keyframes dealCard {
+    from {
+        transform: translateY(-100px) rotate(180deg);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0) rotate(0);
+        opacity: 1;
+    }
+}
+
+@keyframes placeBet {
+    from {
+        transform: scale(0.5);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+@keyframes revealCard {
+    from {
+        transform: rotateY(0);
+    }
+    to {
+        transform: rotateY(180deg);
+    }
+}
+
+@keyframes showResult {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
 } 

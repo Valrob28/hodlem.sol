@@ -1,250 +1,243 @@
 class PokerGame {
     constructor() {
-        this.deck = [];
-        this.communityCards = [];
-        this.players = new Map();
-        this.currentPlayerIndex = 0;
-        this.pot = 0;
-        this.currentBet = 0;
-        this.phase = 'WAITING'; // WAITING, PREFLOP, FLOP, TURN, RIVER, SHOWDOWN
-        this.smallBlind = 10;
-        this.bigBlind = 20;
-        this.dealerPosition = 0;
-        this.initializeDeck();
-    }
-
-    initializeDeck() {
-        const suits = ['♠', '♥', '♦', '♣'];
-        const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+        this.ws = null;
+        this.soundManager = new SoundManager();
+        this.animationManager = new AnimationManager();
+        this.stats = {
+            handsWon: 0,
+            bestHand: null,
+            bestHandRank: 0
+        };
         
-        this.deck = [];
-        for (const suit of suits) {
-            for (const value of values) {
-                this.deck.push({ suit, value });
-            }
-        }
+        this.connect();
+        this.setupEventListeners();
+        this.loadStats();
     }
 
-    shuffle() {
-        for (let i = this.deck.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * (i + 1));
-            [this.deck[i], this.deck[j]] = [this.deck[j], this.deck[i]];
-        }
-    }
+    connect() {
+        this.ws = new WebSocket(`ws://${window.location.host}`);
 
-    startNewHand() {
-        // Réinitialiser le deck
-        this.initializeDeck();
-        this.shuffle();
-        
-        // Réinitialiser les cartes communes
-        this.communityCards = [];
-        
-        // Réinitialiser les mises
-        this.pot = 0;
-        this.currentBet = 0;
-        
-        // Distribuer les cartes aux joueurs
-        for (const [playerId, player] of this.players) {
-            if (!player.folded) {
-                player.cards = [this.deck.pop(), this.deck.pop()];
-            }
-        }
-        
-        // Mettre à jour la position du dealer
-        this.dealerPosition = (this.dealerPosition + 1) % this.players.size;
-        
-        // Définir les blinds
-        const smallBlindPos = (this.dealerPosition + 1) % this.players.size;
-        const bigBlindPos = (this.dealerPosition + 2) % this.players.size;
-        
-        // Collecter les blinds
-        const smallBlindPlayer = Array.from(this.players.values())[smallBlindPos];
-        const bigBlindPlayer = Array.from(this.players.values())[bigBlindPos];
-        
-        if (smallBlindPlayer.chips >= this.smallBlind) {
-            smallBlindPlayer.chips -= this.smallBlind;
-            this.pot += this.smallBlind;
-        }
-        
-        if (bigBlindPlayer.chips >= this.bigBlind) {
-            bigBlindPlayer.chips -= this.bigBlind;
-            this.pot += this.bigBlind;
-            this.currentBet = this.bigBlind;
-        }
-        
-        // Le premier à parler est à gauche de la big blind
-        this.currentPlayerIndex = (bigBlindPos + 1) % this.players.size;
-    }
+        this.ws.onopen = () => {
+            console.log('Connexion WebSocket établie');
+        };
 
-    dealFlop() {
-        // Brûler une carte
-        this.deck.pop();
-        
-        // Distribuer le flop
-        for (let i = 0; i < 3; i++) {
-            this.communityCards.push(this.deck.pop());
-        }
-    }
+        this.ws.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            this.handleMessage(data);
+        };
 
-    dealTurn() {
-        // Brûler une carte
-        this.deck.pop();
-        
-        // Distribuer la turn
-        this.communityCards.push(this.deck.pop());
-    }
-
-    dealRiver() {
-        // Brûler une carte
-        this.deck.pop();
-        
-        // Distribuer la river
-        this.communityCards.push(this.deck.pop());
-    }
-
-    addPlayer(playerId, playerName, chips = 1000) {
-        this.players.set(playerId, {
-            id: playerId,
-            name: playerName,
-            chips: chips,
-            cards: [],
-            folded: false,
-            currentBet: 0
-        });
-    }
-
-    removePlayer(playerId) {
-        this.players.delete(playerId);
-    }
-
-    getPlayer(playerId) {
-        return this.players.get(playerId);
-    }
-
-    getCurrentPhase() {
-        return this.phase;
-    }
-
-    getPot() {
-        return this.pot;
-    }
-
-    getCurrentBet() {
-        return this.currentBet;
-    }
-
-    getCurrentPlayerIndex() {
-        return this.currentPlayerIndex;
-    }
-
-    getCommunityCards() {
-        return this.communityCards;
-    }
-
-    // Méthodes pour la gestion des actions
-    fold(playerId) {
-        const player = this.players.get(playerId);
-        if (player) {
-            player.folded = true;
-            this.nextPlayer();
-        }
-    }
-
-    check(playerId) {
-        if (this.currentBet === 0) {
-            this.nextPlayer();
-            return true;
-        }
-        return false;
-    }
-
-    call(playerId) {
-        const player = this.players.get(playerId);
-        if (player && player.chips >= this.currentBet) {
-            const callAmount = this.currentBet - player.currentBet;
-            player.chips -= callAmount;
-            player.currentBet = this.currentBet;
-            this.pot += callAmount;
-            this.nextPlayer();
-            return true;
-        }
-        return false;
-    }
-
-    raise(playerId, amount) {
-        const player = this.players.get(playerId);
-        if (player && player.chips >= amount && amount > this.currentBet) {
-            player.chips -= amount;
-            player.currentBet = amount;
-            this.pot += amount;
-            this.currentBet = amount;
-            this.currentPlayerIndex = (this.currentPlayerIndex - 1 + this.players.size) % this.players.size;
-            return true;
-        }
-        return false;
-    }
-
-    nextPlayer() {
-        do {
-            this.currentPlayerIndex = (this.currentPlayerIndex + 1) % this.players.size;
-        } while (Array.from(this.players.values())[this.currentPlayerIndex].folded);
-    }
-
-    // Méthodes pour la gestion des phases
-    nextPhase() {
-        switch (this.phase) {
-            case 'PREFLOP':
-                this.phase = 'FLOP';
-                this.dealFlop();
-                break;
-            case 'FLOP':
-                this.phase = 'TURN';
-                this.dealTurn();
-                break;
-            case 'TURN':
-                this.phase = 'RIVER';
-                this.dealRiver();
-                break;
-            case 'RIVER':
-                this.phase = 'SHOWDOWN';
-                break;
-            default:
-                this.phase = 'WAITING';
-        }
-        this.currentBet = 0;
-        this.currentPlayerIndex = this.dealerPosition;
-        this.nextPlayer();
-    }
-
-    // Méthodes pour la gestion des résultats
-    evaluateHand(playerId) {
-        const player = this.players.get(playerId);
-        if (!player || player.folded) return null;
-
-        const allCards = [...player.cards, ...this.communityCards];
-        // Implémenter la logique d'évaluation des mains ici
-        return {
-            rank: 0,
-            name: 'High Card',
-            cards: []
+        this.ws.onclose = () => {
+            console.log('Connexion WebSocket fermée');
         };
     }
 
-    determineWinner() {
-        let winner = null;
-        let bestHand = null;
+    setupEventListeners() {
+        document.getElementById('start-game').addEventListener('click', () => this.startGame());
+        document.getElementById('fold').addEventListener('click', () => this.fold());
+        document.getElementById('place-bet').addEventListener('click', () => this.placeBet());
+        document.getElementById('bet-slider').addEventListener('input', (e) => this.updateBetAmount(e.target.value));
+        document.getElementById('toggle-sound').addEventListener('click', () => this.toggleSound());
+    }
 
-        for (const [playerId, player] of this.players) {
-            if (!player.folded) {
-                const hand = this.evaluateHand(playerId);
-                if (!bestHand || hand.rank > bestHand.rank) {
-                    bestHand = hand;
-                    winner = playerId;
-                }
+    toggleSound() {
+        const isMuted = this.soundManager.toggleMute();
+        document.getElementById('toggle-sound').textContent = isMuted ? '🔇' : '🔊';
+    }
+
+    startGame() {
+        this.soundManager.play('cardDeal');
+        this.ws.send(JSON.stringify({
+            type: 'START_GAME'
+        }));
+    }
+
+    fold() {
+        this.soundManager.play('fold');
+        this.ws.send(JSON.stringify({
+            type: 'FOLD'
+        }));
+    }
+
+    placeBet() {
+        const amount = parseInt(document.getElementById('bet-slider').value);
+        this.soundManager.play('chipStack');
+        this.ws.send(JSON.stringify({
+            type: 'PLACE_BET',
+            amount
+        }));
+    }
+
+    updateBetAmount(value) {
+        const maxBet = parseInt(document.getElementById('player-chips').textContent);
+        const slider = document.getElementById('bet-slider');
+        slider.max = maxBet;
+        slider.value = Math.min(value, maxBet);
+    }
+
+    handleMessage(data) {
+        switch (data.type) {
+            case 'GAME_START':
+                this.handleGameStart(data);
+                break;
+            case 'BET_PLACED':
+                this.handleBetPlaced(data);
+                break;
+            case 'GAME_OVER':
+                this.handleGameOver(data);
+                break;
+            case 'ERROR':
+                this.handleError(data);
+                break;
+        }
+    }
+
+    handleGameStart(data) {
+        // Afficher les cartes du joueur avec animation
+        const playerCards = document.getElementById('player-cards');
+        playerCards.innerHTML = data.playerCards.map((card, index) => {
+            const cardElement = document.createElement('div');
+            cardElement.className = `card ${card.suit === '♥' || card.suit === '♦' ? 'red' : ''}`;
+            cardElement.textContent = `${card.suit}${card.value}`;
+            playerCards.appendChild(cardElement);
+
+            // Animer la distribution des cartes
+            this.animationManager.dealCard(
+                cardElement,
+                { x: -100, y: -100 },
+                { x: index * 80, y: 0 }
+            );
+
+            return cardElement;
+        }).join('');
+
+        // Afficher les cartes du dealer avec animation
+        const dealerCards = document.getElementById('dealer-cards');
+        dealerCards.innerHTML = data.dealerCards.map((card, index) => {
+            const cardElement = document.createElement('div');
+            cardElement.className = `card ${card.value === '?' ? 'hidden' : ''} ${card.suit === '♥' || card.suit === '♦' ? 'red' : ''}`;
+            cardElement.textContent = `${card.suit}${card.value}`;
+            dealerCards.appendChild(cardElement);
+
+            // Animer la distribution des cartes
+            this.animationManager.dealCard(
+                cardElement,
+                { x: -100, y: -100 },
+                { x: index * 80, y: 0 }
+            );
+
+            return cardElement;
+        }).join('');
+
+        // Mettre à jour les jetons
+        this.updateChips(data.chips);
+
+        // Désactiver le bouton de démarrage
+        document.getElementById('start-game').disabled = true;
+
+        // Réinitialiser les résultats
+        document.getElementById('hand-result').textContent = '';
+        document.getElementById('dealer-hand').textContent = '';
+    }
+
+    handleBetPlaced(data) {
+        this.updateChips(data.chips);
+        document.getElementById('pot-amount').textContent = data.pot;
+        document.getElementById('current-bet').textContent = data.currentBet;
+
+        // Animer le pot
+        const potElement = document.getElementById('pot-amount');
+        this.animationManager.updateChips(potElement, data.pot);
+    }
+
+    handleGameOver(data) {
+        // Révéler les cartes du dealer
+        const dealerCards = document.getElementById('dealer-cards');
+        const dealerCardElements = dealerCards.children;
+        Array.from(dealerCardElements).forEach(card => {
+            this.animationManager.revealCard(card);
+        });
+
+        // Évaluer les mains
+        const playerHand = PokerEvaluator.evaluateHand(data.playerCards);
+        const dealerHand = PokerEvaluator.evaluateHand(data.dealerCards);
+        const result = PokerEvaluator.compareHands(data.playerCards, data.dealerCards);
+
+        // Afficher les résultats
+        const resultElement = document.getElementById('hand-result');
+        const dealerHandElement = document.getElementById('dealer-hand');
+        
+        dealerHandElement.textContent = `Main du dealer: ${dealerHand.name}`;
+        dealerHandElement.style.opacity = '1';
+
+        if (result > 0) {
+            this.stats.handsWon++;
+            resultElement.textContent = `Vous gagnez avec ${playerHand.name}!`;
+            resultElement.className = 'hand-result win';
+            this.soundManager.play('win');
+            
+            // Mettre à jour la meilleure main
+            if (playerHand.rank > this.stats.bestHandRank) {
+                this.stats.bestHand = playerHand.name;
+                this.stats.bestHandRank = playerHand.rank;
+                document.getElementById('best-hand').textContent = playerHand.name;
             }
+        } else if (result < 0) {
+            resultElement.textContent = `Vous perdez contre ${dealerHand.name}`;
+            resultElement.className = 'hand-result lose';
+            this.soundManager.play('lose');
+        } else {
+            resultElement.textContent = 'Égalité!';
+            resultElement.className = 'hand-result';
         }
 
-        return winner;
+        resultElement.style.opacity = '1';
+        this.animationManager.showHandResult(resultElement, result > 0);
+
+        // Mettre à jour les statistiques
+        document.getElementById('hands-won').textContent = this.stats.handsWon;
+        this.saveStats();
+
+        // Réactiver le bouton de démarrage
+        document.getElementById('start-game').disabled = false;
+
+        // Réinitialiser le pot et la mise
+        document.getElementById('pot-amount').textContent = '0';
+        document.getElementById('current-bet').textContent = '0';
+        document.getElementById('bet-slider').value = '0';
     }
-} 
+
+    handleError(data) {
+        const errorElement = document.createElement('div');
+        errorElement.className = 'error-message';
+        errorElement.textContent = data.message;
+        document.body.appendChild(errorElement);
+
+        this.animationManager.fadeIn(errorElement);
+        setTimeout(() => {
+            this.animationManager.fadeOut(errorElement);
+            setTimeout(() => errorElement.remove(), 300);
+        }, 3000);
+    }
+
+    updateChips(amount) {
+        const chipsElement = document.getElementById('player-chips');
+        chipsElement.textContent = amount;
+        this.animationManager.updateChips(chipsElement, amount);
+    }
+
+    loadStats() {
+        const savedStats = localStorage.getItem('pokerStats');
+        if (savedStats) {
+            this.stats = JSON.parse(savedStats);
+            document.getElementById('hands-won').textContent = this.stats.handsWon;
+            document.getElementById('best-hand').textContent = this.stats.bestHand || '-';
+        }
+    }
+
+    saveStats() {
+        localStorage.setItem('pokerStats', JSON.stringify(this.stats));
+    }
+}
+
+// Initialiser le jeu
+const game = new PokerGame(); 
