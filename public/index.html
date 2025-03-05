@@ -52,6 +52,20 @@
         </div>
     </div>
 
+    <!-- Modal de connexion -->
+    <div id="login-modal" class="modal">
+        <div class="modal-content">
+            <h2>Rejoindre la partie</h2>
+            <form id="login-form">
+                <input type="text" id="player-name-input" placeholder="Entrez votre nom" required>
+                <div class="modal-buttons">
+                    <button type="submit" id="join-player-submit">Rejoindre comme joueur</button>
+                    <button type="button" id="join-spectator-submit">Rejoindre comme spectateur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="js/websocket.js"></script>
     <script src="js/game.js"></script>

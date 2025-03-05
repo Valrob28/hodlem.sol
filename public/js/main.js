@@ -12,23 +12,38 @@ class PokerApp {
     }
 
     init() {
-        // Initialiser la connexion WebSocket
-        this.websocket.connect();
-
-        // Gérer le redimensionnement de la fenêtre
-        window.addEventListener('resize', () => this.table.resize());
-
-        // Initialiser les gestionnaires d'événements
         this.setupEventListeners();
-
-        // Gérer les événements WebSocket
         this.setupWebSocketEvents();
+        this.showLoginModal();
+    }
+
+    showLoginModal() {
+        const modal = document.getElementById('login-modal');
+        modal.style.display = 'flex';
+    }
+
+    hideLoginModal() {
+        const modal = document.getElementById('login-modal');
+        modal.style.display = 'none';
     }
 
     setupEventListeners() {
-        // Gestionnaires pour le menu principal
-        document.getElementById('join-as-player').addEventListener('click', () => this.joinAsPlayer());
-        document.getElementById('join-as-spectator').addEventListener('click', () => this.joinAsSpectator());
+        // Gestionnaires pour le formulaire de connexion
+        document.getElementById('login-form').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const playerNameInput = document.getElementById('player-name-input');
+            this.playerName = playerNameInput.value.trim();
+            if (this.playerName) {
+                this.hideLoginModal();
+                this.websocket.joinTable(this.currentTableId, this.playerName);
+            }
+        });
+
+        document.getElementById('join-spectator-submit').addEventListener('click', () => {
+            this.playerName = 'Spectateur';
+            this.hideLoginModal();
+            this.websocket.joinTable(this.currentTableId, this.playerName);
+        });
 
         // Gestionnaires pour les contrôles de jeu
         document.getElementById('fold').addEventListener('click', () => this.fold());
@@ -64,18 +79,6 @@ class PokerApp {
         window.addEventListener('serverError', (event) => {
             this.handleServerError(event.detail);
         });
-    }
-
-    joinAsPlayer() {
-        this.playerName = prompt('Entrez votre nom :');
-        if (this.playerName) {
-            this.websocket.joinTable(this.currentTableId, this.playerName);
-        }
-    }
-
-    joinAsSpectator() {
-        this.playerName = 'Spectateur';
-        this.websocket.joinTable(this.currentTableId, this.playerName);
     }
 
     updateTableState(state) {
