@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hodlem Poker - Table de Poker 3D</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.min.js"></script>
+</head>
+<body>
+    <!-- Bandeau de prix des cryptos -->
+    <div id="crypto-ticker">
+        <div class="ticker-content"></div>
+    </div>
+
+    <!-- Zone de publicité gauche -->
+    <div id="ad-left" class="ad-container"></div>
+
+    <!-- Zone de publicité droite -->
+    <div id="ad-right" class="ad-container"></div>
+
+    <!-- Canvas Three.js -->
+    <canvas id="poker-table"></canvas>
+
+    <!-- Interface utilisateur -->
+    <div id="ui-overlay">
+        <!-- Menu principal -->
+        <div id="main-menu" class="ui-panel">
+            <h1>Hodlem Poker</h1>
+            <div class="menu-buttons">
+                <button id="create-table">Créer une table</button>
+                <button id="join-table">Rejoindre une table</button>
+                <button id="view-only">Mode spectateur</button>
+            </div>
+        </div>
+
+        <!-- Interface de jeu -->
+        <div id="game-ui" class="ui-panel hidden">
+            <div class="player-info">
+                <span id="player-name"></span>
+                <span id="player-chips"></span>
+            </div>
+            <div class="game-controls">
+                <button id="fold">Se coucher</button>
+                <button id="check">Parole</button>
+                <button id="call">Suivre</button>
+                <button id="raise">Relancer</button>
+                <input type="range" id="bet-slider" min="0" max="1000" value="0">
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="js/game.js"></script>
+    <script src="js/table.js"></script>
+    <script src="js/websocket.js"></script>
+    <script src="js/crypto-ticker.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 
