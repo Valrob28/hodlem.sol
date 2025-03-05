@@ -142,12 +142,12 @@ button:hover {
     right: 20px;
     top: 50%;
     transform: translateY(-50%);
-    width: 300px;
-    max-height: 80vh;
+    width: 200px;
+    max-height: 60vh;
     overflow-y: auto;
     background: rgba(0, 0, 0, 0.8);
     border-radius: 10px;
-    padding: 15px;
+    padding: 10px;
     color: white;
     z-index: 1000;
 }
@@ -372,4 +372,49 @@ button:hover {
 
 #join-spectator-submit:hover {
     background-color: #555;
+}
+
+/* Styles pour le timer */
+.game-timer {
+    position: fixed;
+    top: 50px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.8);
+    padding: 10px 20px;
+    border-radius: 5px;
+    color: white;
+    font-size: 1.2em;
+    font-weight: bold;
+    z-index: 1000;
+}
+
+.game-timer.warning {
+    color: #ffd700;
+}
+
+.game-timer.danger {
+    color: #ff4444;
+}
+
+/* Styles pour les actions de jeu */
+.game-controls {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.8);
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.game-controls button {
+    padding: 8px 16px;
+    font-size: 14px;
+    min-width: 80px;
+}
+
+#bet-slider {
+    width: 150px;
+    margin: 0 10px;
 } 

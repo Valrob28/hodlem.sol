@@ -8,6 +8,9 @@ class PokerApp {
         this.playerId = null;
         this.playerName = null;
         this.isHost = false;
+        this.timer = null;
+        this.timeLeft = 30;
+        this.isMyTurn = false;
         
         this.init();
     }
@@ -91,17 +94,68 @@ class PokerApp {
         });
     }
 
+    startTimer() {
+        this.timeLeft = 30;
+        this.updateTimerDisplay();
+        this.timer = setInterval(() => {
+            this.timeLeft--;
+            this.updateTimerDisplay();
+            
+            if (this.timeLeft <= 0) {
+                this.handleTimeUp();
+            }
+        }, 1000);
+    }
+
+    stopTimer() {
+        if (this.timer) {
+            clearInterval(this.timer);
+            this.timer = null;
+        }
+    }
+
+    updateTimerDisplay() {
+        const timerElement = document.getElementById('game-timer');
+        timerElement.textContent = this.timeLeft;
+        
+        if (this.timeLeft <= 10) {
+            timerElement.classList.add('danger');
+        } else if (this.timeLeft <= 15) {
+            timerElement.classList.add('warning');
+        } else {
+            timerElement.classList.remove('danger', 'warning');
+        }
+    }
+
+    handleTimeUp() {
+        if (this.isMyTurn) {
+            console.log('Temps écoulé, action par défaut');
+            this.fold();
+        }
+        this.stopTimer();
+    }
+
     updateTableState(state) {
         console.log('Mise à jour de l\'état de la table:', state);
-        // Mettre à jour l'état du jeu
         this.game.players = new Map(state.players);
         this.game.pot = state.pot;
         this.game.currentBet = state.currentBet;
         this.game.phase = state.phase;
         this.game.communityCards = state.communityCards;
 
-        // Mettre à jour l'affichage 3D
+        // Mettre à jour l'affichage
         this.updateTableDisplay();
+        this.updateGameUI(state);
+
+        // Gérer le timer
+        const currentPlayer = Array.from(this.game.players.values())[this.game.currentPlayerIndex];
+        this.isMyTurn = currentPlayer && currentPlayer.id === this.playerId;
+        
+        if (this.isMyTurn) {
+            this.startTimer();
+        } else {
+            this.stopTimer();
+        }
     }
 
     updateTableDisplay() {
@@ -117,6 +171,26 @@ class PokerApp {
 
         // Mettre à jour les cartes communes
         this.table.updateCommunityCards(this.game.communityCards);
+    }
+
+    updateGameUI(state) {
+        // Mettre à jour les informations de phase
+        document.getElementById('current-phase').textContent = `Phase: ${state.phase}`;
+        document.getElementById('current-bet').textContent = `Mise actuelle: ${state.currentBet}`;
+        document.getElementById('pot').textContent = `Pot: ${state.pot}`;
+
+        // Mettre à jour les informations du joueur
+        const player = this.game.players.get(this.playerId);
+        if (player) {
+            document.getElementById('player-name').textContent = player.name;
+            document.getElementById('player-chips').textContent = `Jetons: ${player.chips}`;
+        }
+
+        // Mettre à jour le slider de mise
+        const maxBet = player ? player.chips : 1000;
+        const betSlider = document.getElementById('bet-slider');
+        betSlider.max = maxBet;
+        betSlider.value = Math.min(betSlider.value, maxBet);
     }
 
     handlePlayerJoined(data) {
@@ -143,6 +217,7 @@ class PokerApp {
         console.log('Début de partie:', data);
         this.game.startNewHand();
         this.updateTableDisplay();
+        document.getElementById('game-timer').classList.remove('hidden');
     }
 
     handleServerError(data) {
@@ -152,32 +227,36 @@ class PokerApp {
 
     // Actions de jeu
     fold() {
-        if (this.currentTableId) {
+        if (this.currentTableId && this.isMyTurn) {
             console.log('Se coucher');
             this.websocket.fold(this.currentTableId);
+            this.stopTimer();
         }
     }
 
     check() {
-        if (this.currentTableId && this.game.currentBet === 0) {
+        if (this.currentTableId && this.isMyTurn && this.game.currentBet === 0) {
             console.log('Parole');
             this.websocket.check(this.currentTableId);
+            this.stopTimer();
         }
     }
 
     call() {
-        if (this.currentTableId) {
+        if (this.currentTableId && this.isMyTurn) {
             const callAmount = this.game.currentBet;
             console.log('Suivre:', callAmount);
             this.websocket.placeBet(this.currentTableId, callAmount);
+            this.stopTimer();
         }
     }
 
     raise() {
-        if (this.currentTableId) {
+        if (this.currentTableId && this.isMyTurn) {
             const raiseAmount = parseInt(document.getElementById('bet-slider').value);
             console.log('Relancer:', raiseAmount);
             this.websocket.placeBet(this.currentTableId, raiseAmount);
+            this.stopTimer();
         }
     }
 

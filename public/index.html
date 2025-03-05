@@ -26,6 +26,9 @@
 
     <!-- Interface utilisateur -->
     <div id="ui-overlay">
+        <!-- Timer de jeu -->
+        <div id="game-timer" class="game-timer hidden">30</div>
+
         <!-- Menu principal -->
         <div id="main-menu" class="ui-panel">
             <h1>Poker Game</h1>
@@ -46,8 +49,13 @@
                 <button id="check">Parole</button>
                 <button id="call">Suivre</button>
                 <button id="raise">Relancer</button>
-                <button id="start-game">Démarrer la partie</button>
                 <input type="range" id="bet-slider" min="0" max="1000" value="0">
+                <button id="start-game">Démarrer la partie</button>
+            </div>
+            <div class="game-phase">
+                <span id="current-phase"></span>
+                <span id="current-bet"></span>
+                <span id="pot"></span>
             </div>
         </div>
     </div>
