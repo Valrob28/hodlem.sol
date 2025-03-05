@@ -7,6 +7,7 @@ class PokerApp {
         this.currentTableId = 'default-table';
         this.playerId = null;
         this.playerName = null;
+        this.isHost = false;
         
         this.init();
     }
@@ -15,16 +16,25 @@ class PokerApp {
         this.setupEventListeners();
         this.setupWebSocketEvents();
         this.showLoginModal();
+        this.websocket.connect();
     }
 
     showLoginModal() {
         const modal = document.getElementById('login-modal');
         modal.style.display = 'flex';
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('game-ui').classList.add('hidden');
     }
 
     hideLoginModal() {
         const modal = document.getElementById('login-modal');
         modal.style.display = 'none';
+    }
+
+    showGameUI() {
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('game-ui').classList.remove('hidden');
+        document.getElementById('start-game').style.display = this.isHost ? 'block' : 'none';
     }
 
     setupEventListeners() {
@@ -111,9 +121,15 @@ class PokerApp {
 
     handlePlayerJoined(data) {
         console.log('Nouveau joueur rejoint:', data);
-        const { playerId, playerName, position } = data;
+        const { playerId, playerName, position, isHost } = data;
         this.game.addPlayer(playerId, playerName);
         this.table.addPlayer(playerId, position);
+        
+        if (playerName === this.playerName) {
+            this.playerId = playerId;
+            this.isHost = isHost;
+            this.showGameUI();
+        }
     }
 
     handlePlayerLeft(data) {

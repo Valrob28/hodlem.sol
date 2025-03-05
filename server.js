@@ -157,18 +157,21 @@ async function handleJoinTable(ws, data) {
         }
 
         const playerId = Date.now().toString();
+        const isHost = gameState.table.players.length === 0;
         const player = {
             id: playerId,
             name: playerName,
             ws,
             chips: 1000,
-            position: gameState.table.players.length
+            position: gameState.table.players.length,
+            isHost
         };
 
         console.log('Ajout du joueur à la table:', {
             playerId,
             playerName,
-            position: gameState.table.players.length
+            position: gameState.table.players.length,
+            isHost
         });
 
         // Ajouter le joueur à la base de données
@@ -177,12 +180,23 @@ async function handleJoinTable(ws, data) {
         // Mettre à jour l'état en mémoire
         gameState.table.players.push(player);
 
+        // Notifier tous les joueurs
+        broadcastTableState();
+
+        // Notifier le nouveau joueur de son rôle d'hôte
+        ws.send(JSON.stringify({
+            type: 'PLAYER_JOINED',
+            playerId,
+            playerName,
+            position: gameState.table.players.length - 1,
+            isHost
+        }));
+
         console.log('Joueur ajouté avec succès:', {
             playerId,
-            playerName
+            playerName,
+            isHost
         });
-        
-        broadcastTableState();
     } catch (error) {
         console.error('Erreur lors de l\'ajout du joueur:', error);
         ws.send(JSON.stringify({
@@ -251,6 +265,15 @@ async function handleStartGame(ws, data) {
     
     if (!player) {
         console.log('Joueur non trouvé');
+        return;
+    }
+
+    if (!player.isHost) {
+        console.log('Seul l\'hôte peut démarrer la partie');
+        ws.send(JSON.stringify({
+            type: 'ERROR',
+            message: 'Seul l\'hôte peut démarrer la partie'
+        }));
         return;
     }
 
