@@ -7,7 +7,7 @@ class PokerTable {
             antialias: true
         });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
-        this.renderer.shadowMap.enabled = true;
+        this.renderer.setClearColor(0x1a472a); // Vert foncé pour le feutre
 
         this.table = null;
         this.seats = [];
@@ -15,7 +15,15 @@ class PokerTable {
         this.chips = [];
         this.players = new Map();
 
-        this.init();
+        // Agrandir la table
+        this.tableRadius = 5; // Augmenté de 3 à 5
+        this.tableHeight = 0.5;
+        this.createTable();
+        this.createChips();
+        this.createCards();
+        this.setupLights();
+        this.setupCamera();
+        this.animate();
     }
 
     init() {
@@ -44,7 +52,7 @@ class PokerTable {
 
     createTable() {
         // Surface de la table
-        const tableGeometry = new THREE.CylinderGeometry(3, 3, 0.1, 32);
+        const tableGeometry = new THREE.CylinderGeometry(this.tableRadius, this.tableRadius, this.tableHeight, 32);
         const tableMaterial = new THREE.MeshPhongMaterial({
             color: 0x006400,
             specular: 0x111111
@@ -54,7 +62,7 @@ class PokerTable {
         this.scene.add(this.table);
 
         // Bordure de la table
-        const borderGeometry = new THREE.TorusGeometry(3, 0.1, 16, 100);
+        const borderGeometry = new THREE.TorusGeometry(this.tableRadius, 0.1, 16, 100);
         const borderMaterial = new THREE.MeshPhongMaterial({
             color: 0x8B4513
         });
@@ -72,8 +80,8 @@ class PokerTable {
 
         for (let i = 0; i < 8; i++) {
             const angle = (i / 8) * Math.PI * 2;
-            const x = Math.cos(angle) * 4;
-            const z = Math.sin(angle) * 4;
+            const x = Math.cos(angle) * (this.tableRadius + 1);
+            const z = Math.sin(angle) * (this.tableRadius + 1);
 
             const seat = new THREE.Mesh(seatGeometry, seatMaterial);
             seat.position.set(x, 0.25, z);
@@ -87,16 +95,37 @@ class PokerTable {
     }
 
     addPlayer(playerId, position) {
-        const player = {
-            id: playerId,
-            position: position,
-            chips: 1000,
-            cards: [],
-            avatar: null
-        };
+        const angle = (position / 8) * Math.PI * 2;
+        const x = Math.cos(angle) * (this.tableRadius + 1);
+        const z = Math.sin(angle) * (this.tableRadius + 1);
+        
+        // Créer un avatar pour le joueur
+        const geometry = new THREE.BoxGeometry(0.5, 1, 0.5);
+        const material = new THREE.MeshPhongMaterial({ color: 0x808080 });
+        const avatar = new THREE.Mesh(geometry, material);
+        avatar.position.set(x, 0.5, z);
+        avatar.rotation.y = -angle;
+        this.scene.add(avatar);
 
-        this.players.set(playerId, player);
-        this.updatePlayerDisplay(playerId);
+        // Ajouter le nom du joueur
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('2d');
+        canvas.width = 256;
+        canvas.height = 64;
+        context.fillStyle = 'white';
+        context.font = 'bold 24px Arial';
+        context.textAlign = 'center';
+        context.fillText(playerId, canvas.width / 2, canvas.height / 2);
+
+        const texture = new THREE.CanvasTexture(canvas);
+        const nameGeometry = new THREE.PlaneGeometry(2, 0.5);
+        const nameMaterial = new THREE.MeshBasicMaterial({ map: texture, transparent: true });
+        const nameMesh = new THREE.Mesh(nameGeometry, nameMaterial);
+        nameMesh.position.set(x, 2, z);
+        nameMesh.rotation.y = -angle;
+        this.scene.add(nameMesh);
+
+        this.players.set(playerId, { avatar, nameMesh });
     }
 
     updatePlayerDisplay(playerId) {

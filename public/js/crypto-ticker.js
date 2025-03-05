@@ -2,7 +2,8 @@ class CryptoTicker {
     constructor() {
         this.tickerElement = document.querySelector('.ticker-content');
         this.cryptoData = [];
-        this.updateInterval = 60000; // Mise à jour toutes les minutes
+        this.currentIndex = 0;
+        this.updateInterval = 180000; // 3 minutes en millisecondes
         this.apiUrl = 'https://api.coingecko.com/api/v3';
         this.init();
     }
@@ -30,13 +31,15 @@ class CryptoTicker {
                 const priceChange = crypto.price_change_percentage_24h;
                 const priceChangeColor = priceChange >= 0 ? '#00ff00' : '#ff0000';
                 const priceChangeSymbol = priceChange >= 0 ? '↑' : '↓';
+                const formattedPrice = this.formatNumber(crypto.current_price);
+                const formattedChange = Math.abs(priceChange).toFixed(2);
 
                 return `
                     <span class="crypto-item">
                         ${crypto.symbol.toUpperCase()}: 
-                        $${crypto.current_price.toLocaleString()} 
-                        <span style="color: ${priceChangeColor}">
-                            ${priceChangeSymbol} ${Math.abs(priceChange).toFixed(2)}%
+                        $${formattedPrice} 
+                        <span style="color: ${priceChangeColor}; font-weight: bold; margin-left: 5px;">
+                            ${priceChangeSymbol} ${formattedChange}%
                         </span>
                     </span>
                 `;
@@ -48,6 +51,9 @@ class CryptoTicker {
 
     // Méthode pour formater les nombres
     formatNumber(number) {
+        if (number >= 1000) {
+            return (number / 1000).toFixed(2) + 'K';
+        }
         return new Intl.NumberFormat('fr-FR', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2

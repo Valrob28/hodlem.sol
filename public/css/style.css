@@ -35,7 +35,7 @@ body {
 
 .ticker-content {
     white-space: nowrap;
-    animation: ticker 30s linear infinite;
+    animation: ticker 60s linear infinite;
 }
 
 .ad-container {
@@ -135,4 +135,52 @@ button:hover {
     100% {
         transform: translateX(-100%);
     }
+}
+
+.news-feed {
+    position: fixed;
+    right: 20px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 300px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: rgba(0, 0, 0, 0.8);
+    border-radius: 10px;
+    padding: 15px;
+    color: white;
+    z-index: 1000;
+}
+
+.news-item {
+    margin-bottom: 15px;
+    padding: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.news-item:last-child {
+    border-bottom: none;
+}
+
+.news-source {
+    display: block;
+    font-size: 0.8em;
+    color: #888;
+    margin-bottom: 5px;
+}
+
+.news-item a {
+    color: white;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.news-item a:hover {
+    color: #00ff00;
+}
+
+.news-date {
+    font-size: 0.8em;
+    color: #888;
 } 

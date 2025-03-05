@@ -38,6 +38,7 @@ class PokerApp {
         document.getElementById('call').addEventListener('click', () => this.call());
         document.getElementById('raise').addEventListener('click', () => this.raise());
         document.getElementById('bet-slider').addEventListener('input', (e) => this.updateBetAmount(e.target.value));
+        document.getElementById('start-game').addEventListener('click', () => this.startGame());
     }
 
     setupWebSocketEvents() {
@@ -205,6 +206,16 @@ class PokerApp {
         const maxBet = this.game.players.get(this.playerId)?.chips || 0;
         slider.max = maxBet;
         slider.value = Math.min(value, maxBet);
+    }
+
+    startGame() {
+        if (this.currentTableId) {
+            console.log('Démarrage de la partie');
+            this.websocket.send({
+                type: 'START_GAME',
+                tableId: this.currentTableId
+            });
+        }
     }
 }
 

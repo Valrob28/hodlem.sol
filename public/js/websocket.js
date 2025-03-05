@@ -58,6 +58,7 @@ class WebSocketManager {
         this.messageHandlers.set('PLAYER_LEFT', this.handlePlayerLeft.bind(this));
         this.messageHandlers.set('GAME_START', this.handleGameStart.bind(this));
         this.messageHandlers.set('ERROR', this.handleError.bind(this));
+        this.messageHandlers.set('TABLE_CREATED', this.handleTableCreated.bind(this));
     }
 
     handleMessage(data) {
@@ -72,6 +73,12 @@ class WebSocketManager {
     handleTableState(data) {
         // Émettre un événement personnalisé pour la mise à jour de l'état de la table
         const event = new CustomEvent('tableStateUpdate', { detail: data });
+        window.dispatchEvent(event);
+    }
+
+    handleTableCreated(data) {
+        // Émettre un événement personnalisé pour la création de table
+        const event = new CustomEvent('tableCreated', { detail: data });
         window.dispatchEvent(event);
     }
 
