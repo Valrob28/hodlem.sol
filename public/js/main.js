@@ -65,10 +65,31 @@ class PokerApp {
         window.addEventListener('serverError', (event) => {
             this.handleServerError(event.detail);
         });
+
+        // Gestionnaire pour la création de table
+        window.addEventListener('tableCreated', (event) => {
+            this.handleTableCreated(event.detail);
+        });
     }
 
     createTable() {
+        console.log('Tentative de création de table');
         this.websocket.createTable();
+    }
+
+    handleTableCreated(data) {
+        console.log('Table créée:', data);
+        this.currentTableId = data.tableId;
+        this.playerId = data.playerId;
+        this.playerName = 'Host';
+        
+        // Afficher l'interface de jeu
+        document.getElementById('main-menu').classList.add('hidden');
+        document.getElementById('game-ui').classList.remove('hidden');
+        
+        // Mettre à jour l'affichage du joueur
+        document.getElementById('player-name').textContent = this.playerName;
+        document.getElementById('player-chips').textContent = '1000';
     }
 
     showJoinTableDialog() {
@@ -82,6 +103,7 @@ class PokerApp {
     }
 
     joinTable(tableId) {
+        console.log('Tentative de rejoindre la table:', tableId);
         this.currentTableId = tableId;
         this.websocket.joinTable(tableId, this.playerName);
     }
@@ -95,6 +117,7 @@ class PokerApp {
     }
 
     updateTableState(state) {
+        console.log('Mise à jour de l\'état de la table:', state);
         // Mettre à jour l'état du jeu
         this.game.players = new Map(state.players);
         this.game.pot = state.pot;
@@ -122,35 +145,41 @@ class PokerApp {
     }
 
     handlePlayerJoined(data) {
+        console.log('Nouveau joueur rejoint:', data);
         const { playerId, playerName, position } = data;
         this.game.addPlayer(playerId, playerName);
         this.table.addPlayer(playerId, position);
     }
 
     handlePlayerLeft(data) {
+        console.log('Joueur quitté:', data);
         const { playerId } = data;
         this.game.players.delete(playerId);
         this.table.removePlayer(playerId);
     }
 
     handleGameStart(data) {
+        console.log('Début de partie:', data);
         this.game.startNewHand();
         this.updateTableDisplay();
     }
 
     handleServerError(data) {
+        console.error('Erreur serveur:', data);
         alert(`Erreur : ${data.message}`);
     }
 
     // Actions de jeu
     fold() {
         if (this.currentTableId) {
+            console.log('Se coucher');
             this.websocket.fold(this.currentTableId);
         }
     }
 
     check() {
         if (this.currentTableId && this.game.currentBet === 0) {
+            console.log('Parole');
             this.websocket.check(this.currentTableId);
         }
     }
@@ -158,6 +187,7 @@ class PokerApp {
     call() {
         if (this.currentTableId) {
             const callAmount = this.game.currentBet;
+            console.log('Suivre:', callAmount);
             this.websocket.placeBet(this.currentTableId, callAmount);
         }
     }
@@ -165,6 +195,7 @@ class PokerApp {
     raise() {
         if (this.currentTableId) {
             const raiseAmount = parseInt(document.getElementById('bet-slider').value);
+            console.log('Relancer:', raiseAmount);
             this.websocket.placeBet(this.currentTableId, raiseAmount);
         }
     }
